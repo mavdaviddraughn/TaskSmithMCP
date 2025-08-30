@@ -1,0 +1,45 @@
+# Node modules
+node_modules
+npm-debug.log*
+
+# Build outputs
+dist
+*.tsbuildinfo
+
+# Test artifacts
+coverage
+.nyc_output
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git (we'll init fresh in container)
+.git
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Scripts directory (will be created in container)
+scripts/bash/
+scripts/cmd/
+scripts/pwsh/
+scripts/meta/
+
+# Local development
+.tasksmith/
+
+# Logs
+*.log

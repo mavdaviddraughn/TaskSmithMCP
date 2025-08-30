@@ -1,0 +1,33 @@
+# Test environment Dockerfile
+FROM node:18-alpine
+
+# Install git and other necessary tools
+RUN apk add --no-cache git bash
+
+# Set up git configuration for testing
+RUN git config --global user.name "Test User" \
+    && git config --global user.email "test@example.com" \
+    && git config --global init.defaultBranch main
+
+# Create app directory
+WORKDIR /app
+
+# Copy package files first for better layer caching
+COPY package*.json ./
+COPY tsconfig.json ./
+COPY vitest.config.ts ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy source code
+COPY src/ ./src/
+COPY test/ ./test/
+
+# Initialize a fresh git repository for testing
+RUN git init . \
+    && git add . \
+    && git commit -m "Initial commit for testing"
+
+# Default command runs tests
+CMD ["npm", "test"]

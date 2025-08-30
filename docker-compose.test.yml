@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      # Mount source for development - changes will trigger rebuild
+      - ./src:/app/src
+      - ./test:/app/test
+    environment:
+      - NODE_ENV=test
+      - CI=true
+    command: npm run test
+    
+  test-watch:
+    build:
+      context: .
+      dockerfile: Dockerfile.test  
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+    environment:
+      - NODE_ENV=test
+    command: npm run test:watch
+
+  # Isolated test environment for CRUD operations
+  test-crud:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      - NODE_ENV=test
+    command: npx vitest run test/script-crud.test.ts
+
+  # Interactive test shell for debugging
+  test-shell:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    volumes:
+      - ./src:/app/src
+      - ./test:/app/test
+    environment:
+      - NODE_ENV=test
+    entrypoint: /bin/bash
+    tty: true
+    stdin_open: true
