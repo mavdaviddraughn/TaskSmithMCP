@@ -1,4 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/mavdaviddraughn/TaskSmithMCP/main/schema/scripts.json",
-  "scripts": {}
+  "scripts": {
+    "test-script-2": {
+      "name": "test-script-2",
+      "shell": "bash",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/bash/test-script-2.sh",
+      "description": "Test bash script",
+      "tags": [
+        "test"
+      ],
+      "ttlSeconds": null,
+      "cwdStrategy": "scriptDir",
+      "argsSchema": null,
+      "createdAt": "2025-08-30T22:04:25.173Z",
+      "updatedAt": "2025-08-30T22:04:25.173Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system"
+    }
+  }
 }
