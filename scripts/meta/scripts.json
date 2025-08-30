@@ -1,4 +1,23 @@
 {
   "$schema": "https://raw.githubusercontent.com/mavdaviddraughn/TaskSmithMCP/main/schema/scripts.json",
-  "scripts": {}
+  "scripts": {
+    "test-script": {
+      "name": "test-script",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-script.ps1",
+      "description": "Test PowerShell script",
+      "tags": [
+        "test",
+        "demo"
+      ],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-30T22:06:43.632Z",
+      "updatedAt": "2025-08-30T22:06:43.632Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system"
+    }
+  }
 }
