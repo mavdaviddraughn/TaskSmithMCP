@@ -15,6 +15,21 @@
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system"
+    },
+    "test-update-script-1756591764930": {
+      "name": "test-update-script-1756591764930",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-update-script-1756591764930.ps1",
+      "description": "Initial version",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-30T22:09:24.934Z",
+      "updatedAt": "2025-08-30T22:09:24.934Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system"
     }
   }
 }
