@@ -9,6 +9,8 @@ import {
 import { PathManager } from './path-manager.js';
 import { RegistryManager } from './registry-manager.js';
 import { GitManager } from './git-manager.js';
+import { promises as fs } from 'fs';
+import { dirname } from 'path';
 
 export class TaskManager {
   private config: ServerConfig;
@@ -75,8 +77,102 @@ export class TaskManager {
 
   async saveScript(options: SaveScriptOptions): Promise<{ success: boolean; message: string }> {
     this.ensureInitialized();
-    // TODO: Implement script saving logic
-    throw new Error('saveScript not yet implemented');
+    
+    try {
+      // Validate required fields
+      if (!options.name || !options.shell || !options.content) {
+        throw new Error('Name, shell, and content are required');
+      }
+
+      // Validate script name (no slashes or special characters)
+      if (!/^[a-zA-Z0-9_-]+$/.test(options.name)) {
+        throw new Error('Script name can only contain letters, numbers, hyphens, and underscores');
+      }
+
+      // Validate shell
+      const validShells = ['pwsh', 'bash', 'cmd'];
+      if (!validShells.includes(options.shell)) {
+        throw new Error(`Shell must be one of: ${validShells.join(', ')}`);
+      }
+
+      const context = this.pathManager.getContext();
+      const shellDir = `${context.scriptsDir}/${options.shell}`;
+      const extension = options.shell === 'pwsh' ? 'ps1' : options.shell === 'bash' ? 'sh' : 'cmd';
+      const scriptPath = `${shellDir}/${options.name}.${extension}`;
+      
+      // Check if script already exists
+      const existingScript = await this.registryManager!.getScript(options.name);
+      
+      // Create directory if it doesn't exist
+      await fs.mkdir(dirname(scriptPath), { recursive: true });
+      
+      // Write script content to file
+      await fs.writeFile(scriptPath, options.content, 'utf-8');
+      
+      // Update or create registry entry
+      const now = new Date().toISOString();
+      const scriptMetadata: ScriptMetadata = {
+        name: options.name,
+        shell: options.shell,
+        path: scriptPath,
+        description: options.description || '',
+        tags: options.tags || [],
+        ttlSeconds: options.ttlSeconds || null,
+        cwdStrategy: options.cwdStrategy || 'repoRoot',
+        precheck: options.precheck,
+        argsSchema: options.argsSchema || null,
+        createdAt: existingScript?.createdAt || now,
+        updatedAt: now,
+        lastUsedAt: existingScript?.lastUsedAt || null,
+        createdBy: 'system', // TODO: Get actual user
+        updatedBy: 'system'  // TODO: Get actual user
+      };
+      
+      // Save to registry (always use saveScript - it handles both create and update)
+      await this.registryManager!.saveScript(options.name, scriptMetadata);
+      
+      // Stage files for git commit
+      const relativeScriptPath = scriptPath.replace(context.repoRoot + '/', '');
+      await this.gitManager!.stageFiles([relativeScriptPath, 'scripts/meta/scripts.json']);
+      
+      // Validate one-script-per-commit policy
+      const validation = await this.gitManager!.validateOneScriptPerCommit(
+        context.scriptsDir, 
+        relativeScriptPath
+      );
+      
+      if (!validation.valid) {
+        throw new Error(`Commit policy violation: ${validation.error}`);
+      }
+      
+      // Generate commit message
+      const action = existingScript ? 'update' : 'add';
+      const commitMessage = options.commitMessage || 
+        this.gitManager!.generateCommitMessage(action, options.name, options.description);
+      
+      // Commit the changes
+      await this.gitManager!.commit({ message: commitMessage });
+      
+      // Create tag if specified
+      if (options.tag) {
+        await this.gitManager!.createTag({ 
+          name: options.tag, 
+          message: `Tag for script ${options.name}`,
+          annotated: true 
+        });
+      }
+      
+      return { 
+        success: true, 
+        message: existingScript ? `Script '${options.name}' updated successfully` : `Script '${options.name}' created successfully` 
+      };
+      
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Failed to save script: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
   }
 
   async runScript(options: RunExecutionOptions): Promise<{ runId: string; status: string }> {
@@ -98,12 +194,17 @@ export class TaskManager {
       throw new Error(`Script '${options.name}' not found`);
     }
     
-    // TODO: Read script content from file system
-    // For now, return metadata with empty content
-    return {
-      ...metadata,
-      content: '# TODO: Load script content from file',
-    };
+    try {
+      // Read script content from file system
+      const content = await fs.readFile(metadata.path, 'utf-8');
+      
+      return {
+        ...metadata,
+        content,
+      };
+    } catch (error) {
+      throw new Error(`Failed to read script content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
 
   async setTtl(options: { name: string; ttlSeconds: number | null }): Promise<{ success: boolean }> {
@@ -145,9 +246,50 @@ export class TaskManager {
 
   async deleteScript(options: { name: string; reason?: string }): Promise<{ success: boolean }> {
     this.ensureInitialized();
-    // TODO: Also delete script file from file system
-    const success = await this.registryManager!.deleteScript(options.name);
-    return { success };
+    
+    try {
+      // Get script metadata to find the file path
+      const metadata = await this.registryManager!.getScript(options.name);
+      if (!metadata) {
+        // Script doesn't exist - return success: false instead of throwing
+        return { success: false };
+      }
+      
+      // Delete from registry first
+      const registrySuccess = await this.registryManager!.deleteScript(options.name);
+      if (!registrySuccess) {
+        throw new Error('Failed to remove script from registry');
+      }
+      
+      // Delete script file from file system
+      try {
+        await fs.unlink(metadata.path);
+      } catch (error) {
+        // File might not exist, that's okay
+        console.warn(`Could not delete script file ${metadata.path}:`, error);
+      }
+      
+      const context = this.pathManager.getContext();
+      
+      // Stage the registry file for commit
+      await this.gitManager!.stageFiles(['scripts/meta/scripts.json']);
+      
+      // Generate commit message
+      const commitMessage = this.gitManager!.generateCommitMessage(
+        'remove', 
+        options.name, 
+        options.reason
+      );
+      
+      // Commit the changes
+      await this.gitManager!.commit({ message: commitMessage });
+      
+      return { success: true };
+      
+    } catch (error) {
+      console.error('Failed to delete script:', error);
+      return { success: false };
+    }
   }
 
   async listRuns(options: {
