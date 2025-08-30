@@ -1,4 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/mavdaviddraughn/TaskSmithMCP/main/schema/scripts.json",
-  "scripts": {}
+  "scripts": {
+    "test-delete-script": {
+      "name": "test-delete-script",
+      "shell": "cmd",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/cmd/test-delete-script.cmd",
+      "description": "Script to be deleted",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-30T22:04:49.651Z",
+      "updatedAt": "2025-08-30T22:04:49.651Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system"
+    }
+  }
 }
