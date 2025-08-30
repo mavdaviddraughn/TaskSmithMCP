@@ -1,6 +1,6 @@
 import { promises as fs } from 'fs';
 import { spawn } from 'child_process';
-import { join, resolve, dirname } from 'path';
+import { join } from 'path';
 import { ExecutionContext } from '../types/index.js';
 
 export class PathManager {

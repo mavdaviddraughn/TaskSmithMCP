@@ -8,14 +8,9 @@ import {
 import Ajv from 'ajv';
 import { toolSchemas } from './schemas/index.js';
 import { TaskManager } from './lib/task-manager.js';
-import { ServerConfig } from './types/index.js';
+
 
 const ajv = new Ajv({ strict: false });
-
-interface TaskSmithServer {
-  taskManager: TaskManager;
-  config: ServerConfig;
-}
 
 class TaskSmithMCPServer {
   private server: Server;

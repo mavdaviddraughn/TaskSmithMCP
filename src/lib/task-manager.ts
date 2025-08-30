@@ -175,7 +175,7 @@ export class TaskManager {
     }
   }
 
-  async runScript(options: RunExecutionOptions): Promise<{ runId: string; status: string }> {
+  async runScript(_options: RunExecutionOptions): Promise<{ runId: string; status: string }> {
     this.ensureInitialized();
     // TODO: Implement script execution logic
     throw new Error('runScript not yet implemented');
@@ -268,9 +268,7 @@ export class TaskManager {
         // File might not exist, that's okay
         console.warn(`Could not delete script file ${metadata.path}:`, error);
       }
-      
-      const context = this.pathManager.getContext();
-      
+
       // Stage the registry file for commit
       await this.gitManager!.stageFiles(['scripts/meta/scripts.json']);
       
@@ -292,7 +290,7 @@ export class TaskManager {
     }
   }
 
-  async listRuns(options: {
+  async listRuns(_options: {
     name?: string;
     since?: string;
     limit?: number;
@@ -302,12 +300,12 @@ export class TaskManager {
     throw new Error('listRuns not yet implemented');
   }
 
-  async getRunOutput(options: { runId: string }): Promise<{ stdout: string; stderr: string }> {
+  async getRunOutput(_options: { runId: string }): Promise<{ stdout: string; stderr: string }> {
     // TODO: Implement run output retrieval logic
     throw new Error('getRunOutput not yet implemented');
   }
 
-  async searchRuns(options: {
+  async searchRuns(_options: {
     query: string;
     name?: string;
     regex?: boolean;

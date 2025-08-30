@@ -39,10 +39,10 @@ Implement git repository detection, path resolution, and directory structure cre
 ### T006 [x] CORE: Implement registry management  
 Create script registry read/write functionality with advisory locking and scripts.json persistence
 
-### T007 [>] CORE: Add git integration helpers
+### T007 [x] CORE: Add git integration helpers
 Implement git operations: repo detection, staging, committing, and tagging functionality
 
-### T008 [ ] CORE: Implement script CRUD operations
+### T008 [x] CORE: Implement script CRUD operations
 Build task.save_script, task.get_script, task.delete_script with file operations and git commits
 
 ### T009 [ ] CORE: Build script execution engine
