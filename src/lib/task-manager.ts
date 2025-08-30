@@ -7,10 +7,12 @@ import {
   ServerConfig,
 } from '../types/index.js';
 import { PathManager } from './path-manager.js';
+import { RegistryManager } from './registry-manager.js';
 
 export class TaskManager {
   private config: ServerConfig;
   private pathManager: PathManager;
+  private registryManager: RegistryManager | null = null;
   private initialized = false;
 
   constructor() {
@@ -37,6 +39,11 @@ export class TaskManager {
     try {
       await this.pathManager.initialize();
       
+      // Initialize registry manager
+      const registryPath = this.pathManager.getRegistryPath();
+      this.registryManager = new RegistryManager(registryPath);
+      await this.registryManager.initialize();
+      
       // TODO: Load configuration from disk if it exists
       
       this.initialized = true;
@@ -49,7 +56,7 @@ export class TaskManager {
    * Ensure the manager is initialized
    */
   private ensureInitialized(): void {
-    if (!this.initialized) {
+    if (!this.initialized || !this.registryManager) {
       throw new Error('TaskManager not initialized. Call initialize() first.');
     }
   }
@@ -68,29 +75,67 @@ export class TaskManager {
 
   async listScripts(filter?: { tags?: string[]; shell?: string }): Promise<ScriptMetadata[]> {
     this.ensureInitialized();
-    // TODO: Implement script listing logic
-    throw new Error('listScripts not yet implemented');
+    return await this.registryManager!.listScripts(filter);
   }
 
   async getScript(options: { name: string }): Promise<ScriptMetadata & { content: string }> {
     this.ensureInitialized();
-    // TODO: Implement script retrieval logic
-    throw new Error('getScript not yet implemented');
+    
+    const metadata = await this.registryManager!.getScript(options.name);
+    if (!metadata) {
+      throw new Error(`Script '${options.name}' not found`);
+    }
+    
+    // TODO: Read script content from file system
+    // For now, return metadata with empty content
+    return {
+      ...metadata,
+      content: '# TODO: Load script content from file',
+    };
   }
 
   async setTtl(options: { name: string; ttlSeconds: number | null }): Promise<{ success: boolean }> {
-    // TODO: Implement TTL setting logic
-    throw new Error('setTtl not yet implemented');
+    this.ensureInitialized();
+    const success = await this.registryManager!.setScriptTtl(options.name, options.ttlSeconds);
+    return { success };
   }
 
   async reportStale(options: { olderThanDays?: number }): Promise<StaleReportItem[]> {
-    // TODO: Implement stale reporting logic
-    throw new Error('reportStale not yet implemented');
+    this.ensureInitialized();
+    const olderThanDays = options.olderThanDays || 14;
+    const staleScripts = await this.registryManager!.getStaleScripts(olderThanDays);
+    
+    const now = Date.now();
+    return staleScripts.map(script => {
+      const lastUsedAt = script.lastUsedAt || null;
+      let daysSinceLastUse: number | null = null;
+      
+      if (lastUsedAt) {
+        const lastUsedTime = new Date(lastUsedAt).getTime();
+        daysSinceLastUse = Math.floor((now - lastUsedTime) / (24 * 60 * 60 * 1000));
+      } else {
+        // Never used, calculate from creation
+        const createdTime = new Date(script.createdAt).getTime();
+        daysSinceLastUse = Math.floor((now - createdTime) / (24 * 60 * 60 * 1000));
+      }
+      
+      return {
+        name: script.name,
+        lastUsedAt,
+        daysSinceLastUse,
+        ttlSeconds: script.ttlSeconds || null,
+        shell: script.shell,
+        description: script.description,
+        tags: script.tags,
+      };
+    });
   }
 
   async deleteScript(options: { name: string; reason?: string }): Promise<{ success: boolean }> {
-    // TODO: Implement script deletion logic
-    throw new Error('deleteScript not yet implemented');
+    this.ensureInitialized();
+    // TODO: Also delete script file from file system
+    const success = await this.registryManager!.deleteScript(options.name);
+    return { success };
   }
 
   async listRuns(options: {
