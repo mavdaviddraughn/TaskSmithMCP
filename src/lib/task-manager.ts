@@ -6,9 +6,12 @@ import {
   StaleReportItem,
   ServerConfig,
 } from '../types/index.js';
+import { PathManager } from './path-manager.js';
 
 export class TaskManager {
   private config: ServerConfig;
+  private pathManager: PathManager;
+  private initialized = false;
 
   constructor() {
     // Default configuration
@@ -21,24 +24,56 @@ export class TaskManager {
       maxLogSize: 10 * 1024 * 1024, // 10MB
       previewSize: 1000,
     };
+
+    this.pathManager = new PathManager();
+  }
+
+  /**
+   * Initialize the task manager (must be called before other operations)
+   */
+  async initialize(): Promise<void> {
+    if (this.initialized) return;
+
+    try {
+      await this.pathManager.initialize();
+      
+      // TODO: Load configuration from disk if it exists
+      
+      this.initialized = true;
+    } catch (error) {
+      throw new Error(`Failed to initialize TaskManager: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Ensure the manager is initialized
+   */
+  private ensureInitialized(): void {
+    if (!this.initialized) {
+      throw new Error('TaskManager not initialized. Call initialize() first.');
+    }
   }
 
   async saveScript(options: SaveScriptOptions): Promise<{ success: boolean; message: string }> {
+    this.ensureInitialized();
     // TODO: Implement script saving logic
     throw new Error('saveScript not yet implemented');
   }
 
   async runScript(options: RunExecutionOptions): Promise<{ runId: string; status: string }> {
+    this.ensureInitialized();
     // TODO: Implement script execution logic
     throw new Error('runScript not yet implemented');
   }
 
   async listScripts(filter?: { tags?: string[]; shell?: string }): Promise<ScriptMetadata[]> {
+    this.ensureInitialized();
     // TODO: Implement script listing logic
     throw new Error('listScripts not yet implemented');
   }
 
   async getScript(options: { name: string }): Promise<ScriptMetadata & { content: string }> {
+    this.ensureInitialized();
     // TODO: Implement script retrieval logic
     throw new Error('getScript not yet implemented');
   }
@@ -93,5 +128,31 @@ export class TaskManager {
 
   getConfig(): ServerConfig {
     return { ...this.config };
+  }
+
+  /**
+   * Get repository context information
+   */
+  getRepositoryInfo(): { 
+    repoRoot: string; 
+    scriptsDir: string; 
+    tasksmithDir: string; 
+    isGitRepo: boolean;
+  } {
+    this.ensureInitialized();
+    const context = this.pathManager.getContext();
+    return {
+      repoRoot: context.repoRoot,
+      scriptsDir: context.scriptsDir,
+      tasksmithDir: context.tasksmithDir,
+      isGitRepo: true, // If we got here, we found a git repo
+    };
+  }
+
+  /**
+   * Get the path manager instance
+   */
+  getPathManager(): PathManager {
+    return this.pathManager;
   }
 }

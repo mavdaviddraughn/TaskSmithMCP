@@ -40,6 +40,13 @@ class TaskSmithMCPServer {
     this.setupTools();
   }
 
+  /**
+   * Initialize the server and all managers
+   */
+  private async initialize(): Promise<void> {
+    await this.taskManager.initialize();
+  }
+
   private setupTools(): void {
     // List available tools
     this.server.setRequestHandler(ListToolsRequestSchema, async () => {
@@ -192,6 +199,9 @@ class TaskSmithMCPServer {
   }
 
   public async run(): Promise<void> {
+    // Initialize all managers first
+    await this.initialize();
+    
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
     
