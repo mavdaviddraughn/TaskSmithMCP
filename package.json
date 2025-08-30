@@ -1,0 +1,55 @@
+{
+  "name": "tasksmith-mcp",
+  "version": "0.1.0",
+  "description": "A production-grade MCP server for script persistence, execution, and lifecycle management with Git-based audit trails",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "tasksmith-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "clean": "del-cli dist",
+    "audit": "npm audit --audit-level moderate",
+    "audit:fix": "npm audit fix"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "script-management",
+    "automation",
+    "git",
+    "audit-trail"
+  ],
+  "author": "David Draughn",
+  "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ajv": "^8.17.1",
+    "proper-lockfile": "^4.1.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.10.0",
+    "@types/node": "^22.5.4",
+    "del-cli": "^5.1.0",
+    "eslint": "^9.10.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.5.0",
+    "vitest": "^3.2.4"
+  }
+}
