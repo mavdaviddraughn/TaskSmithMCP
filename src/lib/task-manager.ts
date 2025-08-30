@@ -8,11 +8,13 @@ import {
 } from '../types/index.js';
 import { PathManager } from './path-manager.js';
 import { RegistryManager } from './registry-manager.js';
+import { GitManager } from './git-manager.js';
 
 export class TaskManager {
   private config: ServerConfig;
   private pathManager: PathManager;
   private registryManager: RegistryManager | null = null;
+  private gitManager: GitManager | null = null;
   private initialized = false;
 
   constructor() {
@@ -38,11 +40,21 @@ export class TaskManager {
 
     try {
       await this.pathManager.initialize();
+      const context = this.pathManager.getContext();
       
       // Initialize registry manager
       const registryPath = this.pathManager.getRegistryPath();
       this.registryManager = new RegistryManager(registryPath);
       await this.registryManager.initialize();
+      
+      // Initialize git manager
+      this.gitManager = new GitManager(context.repoRoot);
+      
+      // Verify we're in a git repository
+      const isGitRepo = await this.gitManager.isGitRepository();
+      if (!isGitRepo) {
+        throw new Error('TaskManager requires a Git repository');
+      }
       
       // TODO: Load configuration from disk if it exists
       
@@ -56,7 +68,7 @@ export class TaskManager {
    * Ensure the manager is initialized
    */
   private ensureInitialized(): void {
-    if (!this.initialized || !this.registryManager) {
+    if (!this.initialized || !this.registryManager || !this.gitManager) {
       throw new Error('TaskManager not initialized. Call initialize() first.');
     }
   }
@@ -178,20 +190,47 @@ export class TaskManager {
   /**
    * Get repository context information
    */
-  getRepositoryInfo(): { 
+  async getRepositoryInfo(): Promise<{ 
     repoRoot: string; 
     scriptsDir: string; 
     tasksmithDir: string; 
     isGitRepo: boolean;
-  } {
+    currentBranch?: string;
+    currentCommit?: string;
+    isClean?: boolean;
+  }> {
     this.ensureInitialized();
     const context = this.pathManager.getContext();
-    return {
-      repoRoot: context.repoRoot,
-      scriptsDir: context.scriptsDir,
-      tasksmithDir: context.tasksmithDir,
-      isGitRepo: true, // If we got here, we found a git repo
-    };
+    
+    try {
+      const isGitRepo = await this.gitManager!.isGitRepository();
+      let currentBranch: string | undefined;
+      let currentCommit: string | undefined;
+      let isClean: boolean | undefined;
+      
+      if (isGitRepo) {
+        currentBranch = await this.gitManager!.getCurrentBranch();
+        currentCommit = await this.gitManager!.getCurrentCommitHash();
+        isClean = await this.gitManager!.isWorkingDirectoryClean();
+      }
+      
+      return {
+        repoRoot: context.repoRoot,
+        scriptsDir: context.scriptsDir,
+        tasksmithDir: context.tasksmithDir,
+        isGitRepo,
+        currentBranch,
+        currentCommit,
+        isClean,
+      };
+    } catch (error) {
+      return {
+        repoRoot: context.repoRoot,
+        scriptsDir: context.scriptsDir,
+        tasksmithDir: context.tasksmithDir,
+        isGitRepo: false,
+      };
+    }
   }
 
   /**
@@ -199,5 +238,13 @@ export class TaskManager {
    */
   getPathManager(): PathManager {
     return this.pathManager;
+  }
+
+  /**
+   * Get the git manager instance
+   */
+  getGitManager(): GitManager {
+    this.ensureInitialized();
+    return this.gitManager!;
   }
 }
