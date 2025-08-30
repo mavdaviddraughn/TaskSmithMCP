@@ -1,20 +1,4 @@
 {
   "$schema": "https://raw.githubusercontent.com/mavdaviddraughn/TaskSmithMCP/main/schema/scripts.json",
-  "scripts": {
-    "test-update-script": {
-      "name": "test-update-script",
-      "shell": "pwsh",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-update-script.ps1",
-      "description": "Initial version",
-      "tags": [],
-      "ttlSeconds": null,
-      "cwdStrategy": "repoRoot",
-      "argsSchema": null,
-      "createdAt": "2025-08-30T22:04:26.024Z",
-      "updatedAt": "2025-08-30T22:04:26.024Z",
-      "lastUsedAt": null,
-      "createdBy": "system",
-      "updatedBy": "system"
-    }
-  }
+  "scripts": {}
 }
