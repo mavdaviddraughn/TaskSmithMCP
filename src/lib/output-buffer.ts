@@ -11,6 +11,13 @@
  */
 
 import { EventEmitter } from 'events';
+import {
+  OutputManagementError,
+  MemoryLimitError,
+  ConfigurationError,
+  withErrorHandling,
+  globalErrorHandler
+} from './error-handler';
 
 export interface OutputChunk {
   id: string;
@@ -96,30 +103,91 @@ export class OutputBuffer extends EventEmitter {
   write(content: string, source: 'stdout' | 'stderr' = 'stdout'): void {
     if (!content) return;
 
+    try {
+      // Validate memory limits before writing
+      const estimatedSize = Buffer.byteLength(content, 'utf8');
+      const currentMemory = this.estimateMemoryUsage();
+      const maxMemoryBytes = this.config.maxBytes;
+      
+      if (currentMemory + estimatedSize > maxMemoryBytes) {
+        throw new MemoryLimitError(
+          { component: 'OutputBuffer', operation: 'write' },
+          Math.round((currentMemory + estimatedSize) / (1024 * 1024)),
+          Math.round(maxMemoryBytes / (1024 * 1024))
+        );
+      }
+
+      const chunk: OutputChunk = {
+        id: `${this.config.chunkIdPrefix}-${++this.chunkCounter}`,
+        timestamp: new Date(),
+        content,
+        source,
+        lineNumber: this.totalLinesWritten + this.countLines(content),
+        byteOffset: this.totalBytesWritten
+      };
+
+      this.addChunk(chunk);
+      this.updateMetrics(chunk);
+      this.enforceRetentionPolicy();
+
+      if (this.streaming.realTime) {
+        if (this.streaming.enableLineBuffering && content.includes('\n')) {
+          this.flushPending();
+          this.emit('data', chunk);
+        } else {
+          this.pendingChunks.push(chunk);
+          if (this.pendingChunks.length >= this.streaming.batchSize) {
+            this.flushPending();
+          }
+        }
+      }
+    } catch (error) {
+      this.emit('error', error);
+      
+      // Apply degraded mode - still write but with warnings
+      if (error instanceof MemoryLimitError) {
+        this.handleMemoryPressure(content, source);
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Handle memory pressure by applying degraded mode
+   */
+  private handleMemoryPressure(content: string, source: 'stdout' | 'stderr'): void {
+    // Truncate content if too large
+    const maxContentLength = 1000;
+    const truncatedContent = content.length > maxContentLength 
+      ? content.substring(0, maxContentLength) + '... [TRUNCATED DUE TO MEMORY PRESSURE]'
+      : content;
+
+    // Force cleanup of old data
+    const oldMaxChunks = this.config.maxChunks;
+    this.config.maxChunks = Math.floor(this.config.maxChunks * 0.5); // Reduce by 50%
+    this.enforceRetentionPolicy();
+    this.config.maxChunks = oldMaxChunks; // Restore original limit
+
+    // Create degraded chunk
     const chunk: OutputChunk = {
-      id: `${this.config.chunkIdPrefix}-${++this.chunkCounter}`,
+      id: `${this.config.chunkIdPrefix}-${++this.chunkCounter}-degraded`,
       timestamp: new Date(),
-      content,
+      content: truncatedContent,
       source,
-      lineNumber: this.totalLinesWritten + this.countLines(content),
+      lineNumber: this.totalLinesWritten + this.countLines(truncatedContent),
       byteOffset: this.totalBytesWritten
     };
 
     this.addChunk(chunk);
     this.updateMetrics(chunk);
-    this.enforceRetentionPolicy();
-
-    if (this.streaming.realTime) {
-      if (this.streaming.enableLineBuffering && content.includes('\n')) {
-        this.flushPending();
-        this.emit('data', chunk);
-      } else {
-        this.pendingChunks.push(chunk);
-        if (this.pendingChunks.length >= this.streaming.batchSize) {
-          this.flushPending();
-        }
-      }
-    }
+    
+    this.emit('warning', {
+      type: 'memory_pressure',
+      message: 'Applied degraded mode due to memory pressure',
+      originalLength: content.length,
+      truncatedLength: truncatedContent.length
+    });
   }
 
   /**

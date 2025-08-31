@@ -1,90 +1,99 @@
 /**
- * Component Tests for Output Management System
- * Fixed version with correct API usage
+ * Comprehensive tests for Run Output Management system (T130-T143)
+ * Tests all components: OutputBuffer, StreamManager, ProgressTracker, 
+ * OutputFormatter, OutputFilter, ResultCache, and OutputExporter
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { OutputBuffer } from '../src/lib/output-buffer';
-import { StreamManager } from '../src/lib/stream-manager';
-import { ProgressTracker } from '../src/lib/progress-tracker';
-import { OutputFormatter } from '../src/lib/output-formatter';
-import { OutputFilter } from '../src/lib/output-filter';
-import { ResultCache } from '../src/lib/result-cache';
-import { OutputExporter } from '../src/lib/output-exporter';
+import { OutputBuffer } from '../src/lib/output-buffer.js';
+import { StreamManager } from '../src/lib/stream-manager.js';
+import { ProgressTracker } from '../src/lib/progress-tracker.js';
+import { OutputFormatter } from '../src/lib/output-formatter.js';
+import { OutputFilter } from '../src/lib/output-filter.js';
+import { ResultCache } from '../src/lib/result-cache.js';
+import { OutputExporter } from '../src/lib/output-exporter.js';
 import { promises as fs } from 'fs';
-import { join } from 'path';
 import { tmpdir } from 'os';
-
-// Mock readline for testing
-vi.mock('readline', () => ({
-  createInterface: vi.fn(() => ({
-    on: vi.fn(),
-    close: vi.fn()
-  }))
-}));
+import { join } from 'path';
 
 describe('OutputBuffer', () => {
   let buffer: OutputBuffer;
 
   beforeEach(() => {
     buffer = new OutputBuffer({
-      maxChunks: 10000,
-      maxBytes: 1000000,
+      maxChunks: 1000,
+      maxBytes: 1024 * 1024, // 1MB
       maxLines: 10000,
-      retentionMode: 'time',
-      retentionValue: 7,
-      enableMetrics: true,
-      chunkIdPrefix: 'test'
-    }, {
-      realTime: false,
-      batchSize: 100,
-      flushInterval: 1000,
-      enableLineBuffering: true
+      retentionMode: 'size',
+      retentionValue: 512 * 1024, // 512KB
     });
   });
 
-  afterEach(() => {
-    buffer.destroy();
-  });
-
-  it('should write and retrieve content', () => {
+  it('should write and retrieve chunks', () => {
     buffer.write('Hello World', 'stdout');
     buffer.write('Error message', 'stderr');
 
-    const chunks = buffer.getRange();
+    const chunks = buffer.getAll();
     expect(chunks).toHaveLength(2);
     expect(chunks[0].content).toBe('Hello World');
+    expect(chunks[0].source).toBe('stdout');
     expect(chunks[1].content).toBe('Error message');
+    expect(chunks[1].source).toBe('stderr');
   });
 
-  it('should search for content', () => {
-    buffer.write('First message', 'stdout');
-    buffer.write('Second message', 'stderr');
-    buffer.write('Third message', 'stdout');
-
-    const results = buffer.search('message');
-    expect(results).toHaveLength(3);
-
-    const stdoutResults = buffer.search('message', 'stdout');
-    expect(stdoutResults).toHaveLength(2);
-  });
-
-  it('should get recent entries', () => {
-    for (let i = 0; i < 5; i++) {
-      buffer.write(`Message ${i}`, 'stdout');
-    }
-
-    const recent = buffer.getRecent(3);
-    expect(recent).toHaveLength(3);
-    expect(recent[0].content).toBe('Message 2'); // Most recent first (reverse order)
-  });
-
-  it('should provide metrics', () => {
-    buffer.write('Test message', 'stdout');
+  it('should handle circular buffer overflow', () => {
+    const smallBuffer = new OutputBuffer({ maxChunks: 3 });
     
-    const metrics = buffer.getMetrics();
-    expect(metrics.totalLines).toBeGreaterThan(0);
-    expect(metrics.totalChunks).toBe(1);
+    smallBuffer.write('Chunk 1', 'stdout');
+    smallBuffer.write('Chunk 2', 'stdout');
+    smallBuffer.write('Chunk 3', 'stdout');
+    smallBuffer.write('Chunk 4', 'stdout'); // Should overflow
+
+    const chunks = smallBuffer.getAll();
+    expect(chunks).toHaveLength(3);
+    expect(chunks[0].content).toBe('Chunk 2'); // Oldest should be overwritten
+    expect(chunks[2].content).toBe('Chunk 4');
+  });
+
+  it('should search content', () => {
+    buffer.write('This is a test message', 'stdout');
+    buffer.write('Another test here', 'stdout');
+    buffer.write('No match content', 'stderr');
+
+    const results = buffer.search('test');
+    expect(results).toHaveLength(2);
+    expect(results[0].chunk.content).toBe('This is a test message');
+    expect(results[1].chunk.content).toBe('Another test here');
+  });
+
+  it('should emit events on write', async () => {
+    const writeHandler = vi.fn();
+    buffer.on('write', writeHandler);
+
+    buffer.write('Test content', 'stdout');
+
+    expect(writeHandler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        content: 'Test content',
+        source: 'stdout'
+      })
+    );
+  });
+
+  it('should handle memory limits', () => {
+    const limitedBuffer = new OutputBuffer({
+      maxBytes: 100, // Very small limit
+      retentionMode: 'size',
+      retentionValue: 50
+    });
+
+    // Write content that exceeds limit
+    limitedBuffer.write('A'.repeat(60), 'stdout');
+    limitedBuffer.write('B'.repeat(60), 'stdout');
+
+    const metrics = limitedBuffer.getMetrics();
+    expect(metrics.totalBytesWritten).toBeGreaterThan(100);
+    expect(metrics.currentSizeBytes).toBeLessThanOrEqual(100);
   });
 });
 
@@ -94,18 +103,14 @@ describe('StreamManager', () => {
   beforeEach(() => {
     streamManager = new StreamManager({
       stdout: { maxChunks: 1000 },
-      stderr: { maxChunks: 1000 },
+      stderr: { maxChunks: 500 },
       enableInterleaving: true,
-      errorDetectionPatterns: [/ERROR/i],
-      warningDetectionPatterns: [/WARNING/i]
+      errorDetectionPatterns: [/error/i, /fail/i],
+      warningDetectionPatterns: [/warn/i, /deprecated/i]
     });
   });
 
-  afterEach(() => {
-    streamManager.destroy();
-  });
-
-  it('should handle stdout and stderr separately', () => {
+  it('should manage separate stdout and stderr streams', () => {
     streamManager.writeStdout('Standard output');
     streamManager.writeStderr('Error output');
 
@@ -119,7 +124,11 @@ describe('StreamManager', () => {
   });
 
   it('should create interleaved combined view', () => {
+    const time1 = new Date();
     streamManager.writeStdout('First message');
+    
+    // Small delay to ensure different timestamps
+    const time2 = new Date(time1.getTime() + 1);
     streamManager.writeStderr('Error message');
 
     const combined = streamManager.getCombined();
@@ -171,7 +180,7 @@ describe('ProgressTracker', () => {
   });
 
   it('should start and stop tracking', () => {
-    expect(tracker.isRunning()).toBe(false);
+    expect(tracker.getState().status).toBe('idle');
 
     tracker.start(100);
     expect(tracker.isRunning()).toBe(true);
@@ -198,6 +207,7 @@ describe('ProgressTracker', () => {
 
     const state = tracker.getState();
     expect(state.phase).toBe('Processing');
+    // Note: phases property doesn't exist on ProgressState, removing check
   });
 
   it('should calculate ETA', () => {
@@ -217,13 +227,19 @@ describe('ProgressTracker', () => {
     }
   });
 
-  it('should render progress display', () => {
-    tracker.start(100);
-    tracker.update(50, 'Processing...');
+  it('should emit progress events', () => {
+    const progressHandler = vi.fn();
+    tracker.on('progress', progressHandler);
 
-    const rendered = tracker.render();
-    expect(rendered).toContain('50%');
-    expect(rendered).toContain('Processing...');
+    tracker.start(100);
+    tracker.update(50);
+
+    expect(progressHandler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        current: 50,
+        percentage: 50
+      })
+    );
   });
 });
 
@@ -280,8 +296,8 @@ describe('OutputFormatter', () => {
     };
 
     const formatted = formatter.formatChunk(chunk);
-    expect(formatted).toContain('Test message');
-    expect(formatted).toContain('2025-01-01T12:00:00.000Z');
+    expect(formatted.content).toContain('Test message');
+    expect(formatted.content).toContain('2025-01-01T12:00:00.000Z');
   });
 
   it('should highlight errors and warnings', () => {
@@ -295,7 +311,7 @@ describe('OutputFormatter', () => {
     };
 
     const formatted = formatter.formatChunk(errorChunk);
-    expect(formatted).toContain('\x1b[31m'); // Red color
+    expect(formatted.content).toContain('\x1b[31m'); // Red color
   });
 
   it('should format as different output types', () => {
@@ -315,6 +331,21 @@ describe('OutputFormatter', () => {
     expect(htmlOutput).toContain('Test message');
     
     expect(() => JSON.parse(jsonOutput)).not.toThrow();
+  });
+
+  it('should apply syntax highlighting', () => {
+    const codeChunk = {
+      id: 'code-1',
+      content: 'function test() { return "hello"; }',
+      timestamp: new Date(),
+      source: 'stdout' as const,
+      lineNumber: 1,
+      byteOffset: 0
+    };
+
+    const highlighted = formatter.applySyntaxHighlighting(codeChunk.content, 'javascript');
+    expect(highlighted).toContain('\x1b[35m'); // Keyword color
+    expect(highlighted).toContain('\x1b[32m'); // String color
   });
 });
 
@@ -352,49 +383,57 @@ describe('OutputFilter', () => {
     ];
   });
 
-  it('should create and add filters', () => {
-    // Create filters with proper API (id, keywords/pattern, optional params)
-    const errorFilter = filter.createLevelFilter('error-filter', ['error']);
-    const keywordFilter = filter.createKeywordFilter('db-filter', ['Database']);
-
-    filter.addFilter(errorFilter);
-    filter.addFilter(keywordFilter);
-
-    const filters = filter.getFilters();
-    expect(filters).toHaveLength(2);
+  it('should filter by log levels', () => {
+    const errorFilter = filter.createLevelFilter(['error']);
+    const filtered = testChunks.filter(chunk => errorFilter.test(chunk));
+    
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].content).toBe('ERROR: Database connection failed');
   });
 
-  it('should apply filters to chunks', () => {
-    // Create and add an error filter
-    const errorFilter = filter.createLevelFilter('error-filter', ['error']);
-    filter.addFilter(errorFilter);
-
-    const result = filter.applyFilters(testChunks);
-    expect(result.chunks.length).toBeLessThan(testChunks.length);
+  it('should filter by keywords', () => {
+    const keywordFilter = filter.createKeywordFilter(['Database']);
+    const filtered = testChunks.filter(chunk => keywordFilter.test(chunk));
+    
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].content).toBe('ERROR: Database connection failed');
   });
 
-  it('should search through chunks', () => {
-    const results = filter.search(testChunks, {
-      query: 'Database',
-      searchIn: 'content',
-      caseSensitive: false,
-      wholeWord: false,
-      contextLines: 0
+  it('should filter by regex patterns', () => {
+    const regexFilter = filter.createRegexFilter([/Application|Processing/]);
+    const filtered = testChunks.filter(chunk => regexFilter.test(chunk));
+    
+    expect(filtered).toHaveLength(2);
+  });
+
+  it('should filter by time range', () => {
+    const timeFilter = filter.createTimeRangeFilter({
+      start: new Date('2025-01-01T10:00:30Z'),
+      end: new Date('2025-01-01T10:01:30Z')
     });
+    const filtered = testChunks.filter(chunk => timeFilter.test(chunk));
+    
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].content).toBe('ERROR: Database connection failed');
+  });
+
+  it('should combine multiple filters', () => {
+    const combinedFilter = filter.combineFilters([
+      filter.createLevelFilter(['info', 'debug']),
+      filter.createKeywordFilter(['Application', 'Processing'])
+    ]);
+
+    const filtered = testChunks.filter(chunk => combinedFilter.test(chunk));
+    expect(filtered).toHaveLength(2);
+  });
+
+  it('should search with context', () => {
+    const results = filter.search(testChunks, 'Database', { contextLines: 1 });
     
     expect(results).toHaveLength(1);
-    expect(results[0].chunk.content).toBe('ERROR: Database connection failed');
-  });
-
-  it('should chain multiple filters', () => {
-    const errorFilter = filter.createLevelFilter('error-filter', ['error']);
-    const dbFilter = filter.createKeywordFilter('db-filter', ['Database']);
-    
-    filter.addFilter(errorFilter);
-    filter.addFilter(dbFilter);
-
-    const result = filter.chain(testChunks, 'error-filter', 'db-filter');
-    expect(result.chunks).toHaveLength(1);
+    expect(results[0].context).toContain('INFO: Application started'); // Before context
+    expect(results[0].context).toContain('ERROR: Database connection failed'); // Match
+    expect(results[0].context).toContain('DEBUG: Processing user request'); // After context
   });
 });
 
@@ -453,11 +492,44 @@ describe('ResultCache', () => {
     vi.useRealTimers();
   });
 
-  it('should provide cache statistics', () => {
+  it('should compress large entries', async () => {
+    const largeData = 'A'.repeat(2000); // Exceeds compression threshold
+    
+    await cache.set('large-key', largeData);
     const stats = cache.getStats();
-    expect(stats).toHaveProperty('items');
-    expect(stats).toHaveProperty('memoryUsageMB');
-    expect(stats).toHaveProperty('hitRate');
+    
+    // Should have compression ratio data
+    expect(stats.compressionRatio).toBeLessThan(1);
+  });
+
+  it('should enforce memory limits', async () => {
+    // Fill cache beyond memory limit
+    for (let i = 0; i < 200; i++) {
+      await cache.set(`key-${i}`, 'A'.repeat(1000));
+    }
+    
+    const stats = cache.getStats();
+    expect(stats.items).toBeLessThan(200); // Some items should be evicted
+    expect(stats.memoryUsageMB).toBeLessThanOrEqual(10);
+  });
+
+  it('should persist to disk', async () => {
+    await cache.set('persist-key', 'persistent-data');
+    
+    // Create new cache instance with same directory
+    const newCache = new ResultCache({
+      maxItems: 100,
+      maxMemoryMB: 10,
+      defaultTTL: 3600,
+      persistent: true,
+      persistentPath: tempDir
+    });
+    
+    // Should load persisted data
+    const retrieved = await newCache.get('persist-key');
+    expect(retrieved).toBe('persistent-data');
+    
+    newCache.clear();
   });
 });
 
@@ -536,10 +608,11 @@ describe('OutputExporter', () => {
     expect(result.success).toBe(true);
     
     const exported = await fs.readFile(outputPath, 'utf-8');
-    const lines = exported.split('\n').filter(line => line.trim());
+    const lines = exported.split('\n');
     
-    expect(lines[0]).toContain('timestamp'); // Header
-    expect(lines.length).toBeGreaterThan(1); // Has data rows
+    expect(lines[0]).toContain('timestamp,source,content'); // Header
+    expect(lines[1]).toContain('First message');
+    expect(lines[2]).toContain('Error occurred');
   });
 
   it('should export to HTML format', async () => {
@@ -562,5 +635,56 @@ describe('OutputExporter', () => {
     expect(exported).toContain('<html>');
     expect(exported).toContain('First message');
     expect(exported).toContain('Error occurred');
+  });
+
+  it('should compress exports', async () => {
+    const outputPath = join(tempDir, 'output.json.gz');
+    
+    const result = await exporter.exportToFile(testChunks, outputPath, {
+      format: 'json',
+      includeMetadata: true,
+      includeTimestamps: true,
+      includeLineNumbers: true,
+      includeSource: true,
+      compress: true,
+      prettyPrint: false
+    });
+    
+    expect(result.success).toBe(true);
+    
+    // File should exist and be smaller than uncompressed
+    const stats = await fs.stat(outputPath);
+    expect(stats.size).toBeGreaterThan(0);
+  });
+
+  it('should handle streaming export for large datasets', async () => {
+    // Create large dataset
+    const largeChunks = Array.from({ length: 10000 }, (_, i) => ({
+      id: `chunk-${i}`,
+      content: `Message ${i}: ${'A'.repeat(100)}`,
+      timestamp: new Date(),
+      source: 'stdout' as const,
+      lineNumber: i + 1,
+      byteOffset: i * 100
+    }));
+
+    const outputPath = join(tempDir, 'large-output.json');
+    
+    const result = await exporter.streamExport(largeChunks, outputPath, {
+      format: 'json',
+      includeMetadata: true,
+      includeTimestamps: true,
+      includeLineNumbers: true,
+      includeSource: true,
+      compress: false,
+      prettyPrint: false,
+      chunkSize: 1000 // Process in chunks
+    });
+    
+    expect(result.success).toBe(true);
+    
+    // Verify the file was created and has content
+    const stats = await fs.stat(outputPath);
+    expect(stats.size).toBeGreaterThan(1000000); // Should be substantial
   });
 });

@@ -1,5 +1,5 @@
 /**
- * Integration tests for TaskManager with Output Management (Fixed TypeScript interfaces)
+ * Integration tests for TaskManager with Output Management (T140)
  * Tests the complete flow from script execution through output processing
  */
 
@@ -17,12 +17,8 @@ describe('TaskManager Output Management Integration', () => {
     // Create temporary test repository
     testRepoDir = await fs.mkdtemp(join(tmpdir(), 'tasksmith-integration-'));
     
-    // Initialize git repo in the test directory
-    process.env.TEST_REPO_ROOT = testRepoDir;
-    
-    // TaskManager constructor takes no parameters
-    taskManager = new TaskManager();
-    await taskManager.initialize();
+    // Initialize TaskManager with test directory
+    taskManager = new TaskManager(testRepoDir);
   });
 
   afterEach(async () => {
@@ -35,7 +31,7 @@ describe('TaskManager Output Management Integration', () => {
   describe('Basic Script Execution with Streaming', () => {
     it('should execute script with output streaming enabled', async () => {
       // Create a simple test script
-      const saveResult = await taskManager.saveScript({
+      const script = await taskManager.saveScript({
         name: 'streaming-test',
         shell: 'pwsh',
         content: `
@@ -50,14 +46,10 @@ Write-Host "Test completed"
         description: 'Test script for streaming output'
       });
 
-      // saveScript returns { success: boolean; message: string }
-      expect(saveResult.success).toBe(true);
+      expect(script.success).toBe(true);
 
-      // Execute with streaming enabled - runScript takes RunExecutionOptions
-      const result = await taskManager.runScript({
-        name: 'streaming-test',
-        args: []
-      }, {
+      // Execute with streaming enabled
+      const result = await taskManager.runScript(script.name!, {
         streaming: {
           stdout: {
             maxLines: 100,
@@ -81,22 +73,21 @@ Write-Host "Test completed"
         }
       });
 
-      // runScript returns { runId, status, exitCode?, execution? }
-      expect(result.status).toBe('completed');
-      expect(result.execution?.stdout).toContain('Starting test');
-      expect(result.execution?.stdout).toContain('Standard output line');
-      expect(result.execution?.stderr).toContain('Test error message');
+      // Validate execution result
+      expect(result.success).toBe(true);
+      expect(result.stdout).toContain('Starting test');
+      expect(result.stdout).toContain('Standard output line');
+      expect(result.stderr).toContain('Test error message');
 
-      // Check if execution metadata is present
-      expect(result.execution).toBeDefined();
-      expect(result.execution?.start).toBeDefined();
-      expect(result.execution?.duration).toBeGreaterThan(0);
-      expect(result.runId).toBeDefined();
+      // Check if output management metadata is present
+      expect(result.metadata).toBeDefined();
+      expect(result.metadata?.outputLines).toBeGreaterThan(0);
+      expect(result.metadata?.executionTimeMs).toBeGreaterThan(0);
     });
 
     it('should handle large output with memory management', async () => {
       // Create script that generates large output
-      const saveResult = await taskManager.saveScript({
+      const script = await taskManager.saveScript({
         name: 'large-output-test',
         shell: 'pwsh',
         content: `
@@ -109,12 +100,7 @@ for ($i = 1; $i -le 50; $i++) {
         description: 'Test script for large output handling'
       });
 
-      expect(saveResult.success).toBe(true);
-
-      const result = await taskManager.runScript({
-        name: 'large-output-test',
-        args: []
-      }, {
+      const result = await taskManager.runScript(script.name!, {
         streaming: {
           stdout: {
             maxLines: 100,
@@ -138,32 +124,27 @@ for ($i = 1; $i -le 50; $i++) {
         }
       });
 
-      expect(result.status).toBe('completed');
-      expect(result.execution?.stdout).toContain('Line 1:');
-      expect(result.execution?.stdout).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.stdout).toContain('Line 1:');
+      expect(result.metadata?.outputLines).toBeGreaterThanOrEqual(50);
     });
   });
 
   describe('Output Formatting and Filtering', () => {
     it('should apply formatting options to output', async () => {
-      const saveResult = await taskManager.saveScript({
+      const script = await taskManager.saveScript({
         name: 'format-test',
         shell: 'pwsh',
-        content: [
-          'Write-Host "INFO: Information message"',
-          'Write-Host "WARN: Warning message"',
-          'Write-Host "ERROR: Error message"',
-          'Write-Host "DEBUG: Debug message"'
-        ].join('\n'),
+        content: `
+Write-Host "INFO: Information message"
+Write-Host "WARN: Warning message"  
+Write-Host "ERROR: Error message"
+Write-Host "DEBUG: Debug message"
+        `.trim(),
         description: 'Test script for output formatting'
       });
 
-      expect(saveResult.success).toBe(true);
-
-      const result = await taskManager.runScript({
-        name: 'format-test',
-        args: []
-      }, {
+      const result = await taskManager.runScript(script.name!, {
         formatting: {
           colorScheme: 'dark',
           syntaxHighlighting: true,
@@ -177,35 +158,30 @@ for ($i = 1; $i -le 50; $i++) {
         }
       });
 
-      expect(result.status).toBe('completed');
-      expect(result.execution?.stdout).toContain('INFO:');
-      expect(result.execution?.stdout).toContain('WARN:');
-      expect(result.execution?.stdout).toContain('ERROR:');
-      // Note: Filtering would be applied during processing, but raw output may still contain all
-      expect(result.execution?.filteredOutput).toBeDefined();
+      expect(result.success).toBe(true);
+      expect(result.stdout).toContain('INFO:');
+      expect(result.stdout).toContain('WARN:');
+      expect(result.stdout).toContain('ERROR:');
+      // Debug should be filtered out
+      expect(result.stdout).not.toContain('DEBUG:');
     });
   });
 
   describe('Error Handling and Recovery', () => {
     it('should capture and categorize errors properly', async () => {
-      const saveResult = await taskManager.saveScript({
+      const script = await taskManager.saveScript({
         name: 'error-test',
         shell: 'pwsh',
-        content: [
-          'Write-Host "Starting operation..."',
-          'Write-Error "Critical error occurred" -ErrorAction Continue',
-          'Write-Warning "Performance warning"',
-          'throw "Fatal exception occurred"'
-        ].join('\n'),
+        content: `
+Write-Host "Starting operation..."
+Write-Error "Critical error occurred" -ErrorAction Continue
+Write-Warning "Performance warning"
+throw "Fatal exception occurred"
+        `.trim(),
         description: 'Test script for error handling'
       });
 
-      expect(saveResult.success).toBe(true);
-
-      const result = await taskManager.runScript({
-        name: 'error-test',
-        args: []
-      }, {
+      const result = await taskManager.runScript(script.name!, {
         streaming: {
           stdout: {
             maxLines: 100,
@@ -230,35 +206,30 @@ for ($i = 1; $i -le 50; $i++) {
       });
 
       // Should fail due to thrown exception
-      expect(result.status).toBe('failed');
-      expect(result.execution?.stderr).toContain('Critical error');
-      expect(result.execution?.stderr).toContain('Fatal exception');
+      expect(result.success).toBe(false);
+      expect(result.stderr).toContain('Critical error');
+      expect(result.stderr).toContain('Fatal exception');
       
-      // Check that we have error details
-      expect(result.exitCode).toBeGreaterThan(0);
-      expect(result.execution?.start).toBeDefined();
+      // Check error categorization
+      expect(result.metadata?.errorCount).toBeGreaterThan(0);
+      expect(result.metadata?.warningCount).toBeGreaterThan(0);
     });
   });
 
   describe('Export and Caching', () => {
     it('should export output in multiple formats', async () => {
-      const saveResult = await taskManager.saveScript({
+      const script = await taskManager.saveScript({
         name: 'export-test',
         shell: 'pwsh',
-        content: [
-          'Write-Host "Export test data line 1"',
-          'Write-Host "Export test data line 2"',
-          'Write-Host "Export test data line 3"'
-        ].join('\n'),
+        content: `
+Write-Host "Export test data line 1"
+Write-Host "Export test data line 2"
+Write-Host "Export test data line 3"
+        `.trim(),
         description: 'Test script for output export'
       });
 
-      expect(saveResult.success).toBe(true);
-
-      const result = await taskManager.runScript({
-        name: 'export-test',
-        args: []
-      }, {
+      const result = await taskManager.runScript(script.name!, {
         export: {
           format: 'json',
           includeMetadata: true,
@@ -274,17 +245,14 @@ for ($i = 1; $i -le 50; $i++) {
         }
       });
 
-      expect(result.status).toBe('completed');
-      expect(result.execution?.stdout).toContain('Export test data');
+      expect(result.success).toBe(true);
+      expect(result.stdout).toContain('Export test data');
       
-      // Check if export result is available
-      if (result.execution?.exportResult) {
-        expect(result.execution.exportResult.success).toBe(true);
-        if (result.execution.exportResult.path) {
-          // Verify export file exists and contains expected data
-          const exportData = await fs.readFile(result.execution.exportResult.path, 'utf8');
-          expect(exportData).toContain('Export test data');
-        }
+      // Check if export metadata is available
+      if (result.metadata?.exportPath) {
+        // Verify export file exists and contains expected data
+        const exportData = await fs.readFile(result.metadata.exportPath, 'utf8');
+        expect(exportData).toContain('Export test data');
       }
     });
   });
@@ -296,9 +264,7 @@ describe('Performance and Scalability Tests', () => {
 
   beforeEach(async () => {
     testRepoDir = await fs.mkdtemp(join(tmpdir(), 'tasksmith-perf-'));
-    process.env.TEST_REPO_ROOT = testRepoDir;
-    taskManager = new TaskManager();
-    await taskManager.initialize();
+    taskManager = new TaskManager(testRepoDir);
   });
 
   afterEach(async () => {
@@ -308,26 +274,21 @@ describe('Performance and Scalability Tests', () => {
   });
 
   it('should handle high-volume output efficiently', async () => {
-    const saveResult = await taskManager.saveScript({
+    const script = await taskManager.saveScript({
       name: 'volume-test',
       shell: 'pwsh',
-      content: [
-        '# Generate high volume output',
-        'for ($i = 1; $i -le 1000; $i++) {',
-        '  Write-Host "Volume test line $i with some additional content to increase size"',
-        '}'
-      ].join('\n'),
+      content: `
+# Generate high volume output
+for ($i = 1; $i -le 1000; $i++) {
+  Write-Host "Volume test line $i with some additional content to increase size"
+}
+      `.trim(),
       description: 'High volume output test'
     });
 
-    expect(saveResult.success).toBe(true);
-
     const startTime = Date.now();
     
-    const result = await taskManager.runScript({
-      name: 'volume-test',
-      args: []
-    }, {
+    const result = await taskManager.runScript(script.name!, {
       streaming: {
         stdout: {
           maxLines: 2000,
@@ -360,13 +321,12 @@ describe('Performance and Scalability Tests', () => {
 
     const executionTime = Date.now() - startTime;
 
-    expect(result.status).toBe('completed');
-    expect(result.execution?.stdout).toContain('Volume test line');
+    expect(result.success).toBe(true);
+    expect(result.metadata?.outputLines).toBe(1000);
     expect(executionTime).toBeLessThan(30000); // Should complete within 30 seconds
     
-    // Check that execution completed successfully
-    expect(result.execution?.duration).toBeDefined();
-    expect(result.execution?.end).toBeDefined();
+    // Check memory efficiency
+    expect(result.metadata?.peakMemoryUsage).toBeLessThan(50 * 1024 * 1024); // Less than 50MB peak
   });
 
   it('should maintain performance with concurrent executions', async () => {
@@ -397,10 +357,7 @@ describe('Performance and Scalability Tests', () => {
     
     // Execute all scripts concurrently
     const results = await Promise.all([
-      taskManager.runScript({
-        name: 'concurrent-1',
-        args: []
-      }, {
+      taskManager.runScript(scripts[0].name!, {
         streaming: {
           stdout: {
             maxLines: 200,
@@ -416,10 +373,7 @@ describe('Performance and Scalability Tests', () => {
           warningPatterns: ['warn:']
         }
       }),
-      taskManager.runScript({
-        name: 'concurrent-2',
-        args: []
-      }, {
+      taskManager.runScript(scripts[1].name!, {
         streaming: {
           stdout: {
             maxLines: 200,
@@ -435,10 +389,7 @@ describe('Performance and Scalability Tests', () => {
           warningPatterns: ['warn:']
         }
       }),
-      taskManager.runScript({
-        name: 'concurrent-3',
-        args: []
-      }, {
+      taskManager.runScript(scripts[2].name!, {
         streaming: {
           stdout: {
             maxLines: 200,
@@ -460,8 +411,8 @@ describe('Performance and Scalability Tests', () => {
 
     // All should succeed
     results.forEach(result => {
-      expect(result.status).toBe('completed');
-      expect(result.execution?.stdout).toContain('Concurrent');
+      expect(result.success).toBe(true);
+      expect(result.metadata?.outputLines).toBe(100);
     });
 
     // Concurrent execution should be faster than sequential
