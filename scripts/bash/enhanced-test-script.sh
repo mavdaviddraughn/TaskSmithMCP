@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "Version 1"
+echo "Version 2 - enhanced"
