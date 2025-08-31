@@ -186,8 +186,15 @@ export class RegistryManager {
         try {
           changelogEntry.commit = await this.gitManager.getCurrentCommitHash();
           changelogEntry.tag = `mcp-scripts/${name}@${newVersion}`;
+          
+          // Create version tag automatically
+          await this.gitManager.tagScriptVersion(name, newVersion, undefined, {
+            includeDiffSummary: true,
+            maxDiffLines: 10
+          });
         } catch (error) {
-          // Git not available, continue without commit info
+          // Git not available or tag creation failed, continue without commit info
+          console.warn(`Failed to create version tag for ${name}@${newVersion}:`, error);
         }
       }
       
@@ -224,8 +231,15 @@ export class RegistryManager {
         try {
           initialChangelogEntry.commit = await this.gitManager.getCurrentCommitHash();
           initialChangelogEntry.tag = `mcp-scripts/${name}@1`;
+          
+          // Create initial version tag
+          await this.gitManager.tagScriptVersion(name, 1, undefined, {
+            includeDiffSummary: true,
+            maxDiffLines: 10
+          });
         } catch (error) {
-          // Git not available, continue without commit info
+          // Git not available or tag creation failed, continue without commit info
+          console.warn(`Failed to create initial version tag for ${name}@1:`, error);
         }
       }
       

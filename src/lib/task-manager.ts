@@ -29,6 +29,10 @@ export class TaskManager {
       tagPattern: 'mcp-scripts/${name}@${version}',
       maxLogSize: 10 * 1024 * 1024, // 10MB
       previewSize: 1000,
+      // Enhanced Git Integration (T119-T122)
+      allowBatchCommits: false,
+      requireGpgSigning: false,
+      enforceStrictCommitPolicy: true,
     };
 
     this.pathManager = new PathManager();
@@ -141,23 +145,32 @@ export class TaskManager {
       
       await this.gitManager!.stageFiles([relativeScriptPath, relativeRegistryPath]);
       
-      // Validate one-script-per-commit policy
+      // Validate commit policy with enhanced options
       const validation = await this.gitManager!.validateOneScriptPerCommit(
         context.scriptsDir, 
-        relativeScriptPath
+        relativeScriptPath,
+        this.config.allowBatchCommits
       );
       
-      if (!validation.valid) {
+      if (!validation.valid && this.config.enforceStrictCommitPolicy) {
         throw new Error(`Commit policy violation: ${validation.error}`);
       }
       
-      // Generate commit message
+      // Generate commit message with enhanced format
       const action = existingScript ? 'update' : 'add';
       const commitMessage = options.commitMessage || 
-        this.gitManager!.generateCommitMessage(action, options.name, options.description);
+        this.gitManager!.generateCommitMessage(
+          action, 
+          options.name, 
+          options.description,
+          this.config.customCommitMessagePattern
+        );
       
-      // Commit the changes
-      await this.gitManager!.commit({ message: commitMessage });
+      // Commit the changes with enhanced options
+      await this.gitManager!.commit({ 
+        message: commitMessage,
+        signCommit: this.config.requireGpgSigning
+      });
       
       // Create tag if specified
       if (options.tag) {
@@ -455,5 +468,93 @@ export class TaskManager {
   async getRegistryStats(): Promise<any> {
     this.ensureInitialized();
     return await this.registryManager!.getStats();
+  }
+
+  // Enhanced Git Integration Methods (T119-T125)
+
+  /**
+   * Get version tags for a specific script
+   */
+  async getScriptVersionTags(options: { name: string }): Promise<Array<{
+    tag: string;
+    version: number;
+    commit: string;
+    date: string;
+  }>> {
+    this.ensureInitialized();
+    return await this.gitManager!.getScriptVersionTags(options.name, this.config.tagPattern);
+  }
+
+  /**
+   * Create version tag manually (if automatic tagging failed)
+   */
+  async createScriptVersionTag(options: { 
+    name: string; 
+    version: number; 
+    force?: boolean;
+    includeDiffSummary?: boolean;
+  }): Promise<{ success: boolean; tagName?: string; message?: string }> {
+    this.ensureInitialized();
+    
+    try {
+      const tagName = await this.gitManager!.tagScriptVersion(
+        options.name,
+        options.version,
+        undefined,
+        {
+          tagPattern: this.config.tagPattern,
+          force: options.force || false,
+          includeDiffSummary: options.includeDiffSummary !== false
+        }
+      );
+      
+      return { success: true, tagName };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Failed to create version tag: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
+  }
+
+  /**
+   * Configure git policies and options
+   */
+  async configureGitPolicies(options: {
+    allowBatchCommits?: boolean;
+    requireGpgSigning?: boolean;
+    customCommitMessagePattern?: string;
+    enforceStrictCommitPolicy?: boolean;
+    tagPattern?: string;
+  }): Promise<{ success: boolean; message?: string }> {
+    this.ensureInitialized();
+    
+    try {
+      // Update configuration
+      if (options.allowBatchCommits !== undefined) {
+        this.config.allowBatchCommits = options.allowBatchCommits;
+      }
+      if (options.requireGpgSigning !== undefined) {
+        this.config.requireGpgSigning = options.requireGpgSigning;
+      }
+      if (options.customCommitMessagePattern !== undefined) {
+        this.config.customCommitMessagePattern = options.customCommitMessagePattern;
+      }
+      if (options.enforceStrictCommitPolicy !== undefined) {
+        this.config.enforceStrictCommitPolicy = options.enforceStrictCommitPolicy;
+      }
+      if (options.tagPattern !== undefined) {
+        this.config.tagPattern = options.tagPattern;
+      }
+      
+      // TODO: Persist configuration to disk
+      
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Failed to configure git policies: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
   }
 }

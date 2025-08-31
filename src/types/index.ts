@@ -85,6 +85,11 @@ export interface ServerConfig {
   tagPattern: string;
   maxLogSize: number;
   previewSize: number;
+  // Enhanced Git Integration (T119-T122)
+  allowBatchCommits?: boolean;
+  requireGpgSigning?: boolean;
+  customCommitMessagePattern?: string;
+  enforceStrictCommitPolicy?: boolean;
 }
 
 export interface RunExecutionOptions {
