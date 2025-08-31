@@ -321,6 +321,35 @@
           "tag": "mcp-scripts/stats-test-2@2"
         }
       ]
+    },
+    "test-script": {
+      "name": "test-script",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-script.ps1",
+      "description": "Test PowerShell script",
+      "tags": [
+        "demo",
+        "test"
+      ],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T00:38:59.518Z",
+      "updatedAt": "2025-08-31T00:38:59.518Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "16ffe45dcae473f495cf85bca68655cbeb548d5d",
+          "timestamp": "2025-08-31T00:38:59.518Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/test-script@1"
+        }
+      ]
     }
   }
 }
