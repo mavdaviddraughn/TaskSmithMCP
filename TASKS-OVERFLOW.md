@@ -19,6 +19,12 @@ This file contains an extended catalog of future feature tasks based on user req
 - **DOCS**: Documentation and guides
 - **INFRA**: Infrastructure and tooling
 
+### Commit Message Guidelines
+- **Reference Task IDs**: Include relevant task IDs from TASKS.md or TASKS-OVERFLOW.md in commit messages
+- **Format**: Use format like `feat(T001): implement script registry system` or `fix(T045): resolve output buffer memory leak`
+- **Multiple Tasks**: For commits affecting multiple tasks, list them: `feat(T001,T002): add registry with validation`
+- **Non-task commits**: Use standard conventional commit format without task IDs for maintenance, refactoring, or documentation-only changes
+
 ---
 
 ## Extended Feature Tasks (Starting T109+)
