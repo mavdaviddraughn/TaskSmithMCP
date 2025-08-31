@@ -1,3 +1,11 @@
+export interface ChangelogEntry {
+  version: number;
+  commit: string;
+  tag?: string;
+  timestamp: string;
+  description?: string;
+}
+
 export interface ScriptMetadata {
   name: string;
   shell: 'pwsh' | 'bash' | 'cmd';
@@ -13,6 +21,42 @@ export interface ScriptMetadata {
   lastUsedAt?: string | null;
   createdBy: string;
   updatedBy: string;
+  // Schema v2 fields
+  version?: number;
+  requireApproval?: boolean;
+  changelog?: ChangelogEntry[];
+}
+
+// Tag taxonomy for structured tagging system
+export type DomainTag = 
+  | 'domain:build' 
+  | 'domain:db' 
+  | 'domain:deploy' 
+  | 'domain:test' 
+  | 'domain:tooling' 
+  | 'domain:analytics' 
+  | 'domain:infra' 
+  | 'domain:release';
+
+export type RiskTag = 'risk:standard' | 'risk:dangerous';
+
+export type LifecycleTag = 
+  | 'lifecycle:exempt' 
+  | 'lifecycle:stale-candidate' 
+  | `lifecycle:ttl:${number}d` 
+  | `lifecycle:ttl:${number}h`;
+
+export type MaintenanceTag = 
+  | 'maintenance:updated' 
+  | `maintenance:renamed:${string}`;
+
+export type StructuredTag = DomainTag | RiskTag | LifecycleTag | MaintenanceTag;
+
+export interface TagValidationResult {
+  valid: boolean;
+  invalid: string[];
+  structured: StructuredTag[];
+  unstructured: string[];
 }
 
 export interface ScriptRegistry {

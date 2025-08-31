@@ -1,7 +1,8 @@
 import { promises as fs } from 'fs';
 import { dirname } from 'path';
 import lockFile from 'proper-lockfile';
-import { ScriptRegistry, ScriptMetadata } from '../types/index.js';
+import { ScriptRegistry, ScriptMetadata, ChangelogEntry } from '../types/index.js';
+import { TagManager } from './tag-manager.js';
 
 export class RegistryManager {
   private registryPath: string;
@@ -10,9 +11,17 @@ export class RegistryManager {
     update: 2000, // 2 seconds
     retries: 3,
   };
+  private gitManager?: any; // Will be injected for commit tracking
 
   constructor(registryPath: string) {
     this.registryPath = registryPath;
+  }
+
+  /**
+   * Set git manager for changelog tracking
+   */
+  setGitManager(gitManager: any): void {
+    this.gitManager = gitManager;
   }
 
   /**
@@ -35,7 +44,7 @@ export class RegistryManager {
   }
 
   /**
-   * Read the registry with proper locking
+   * Read the registry with proper locking and automatic migration
    */
   async readRegistry(): Promise<ScriptRegistry> {
     const release = await lockFile.lock(this.registryPath, this.lockOptions);
@@ -49,12 +58,74 @@ export class RegistryManager {
         throw new Error('Invalid registry format: missing scripts object');
       }
       
+      // Perform schema migration if needed
+      const migratedRegistry = this.migrateRegistry(registry);
+      
+      // Write back if migration occurred
+      if (migratedRegistry !== registry) {
+        await this.writeRegistryUnsafe(migratedRegistry);
+        return migratedRegistry;
+      }
+      
       return registry;
     } catch (error) {
       throw new Error(`Failed to read registry: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       await release();
     }
+  }
+
+  /**
+   * Migrate registry from v1 to v2+ schema
+   */
+  private migrateRegistry(registry: ScriptRegistry): ScriptRegistry {
+    let migrationOccurred = false;
+    const migratedScripts: Record<string, ScriptMetadata> = {};
+    
+    for (const [name, script] of Object.entries(registry.scripts)) {
+      const migratedScript = { ...script };
+      
+      // Add version field if missing (v2 requirement)
+      if (migratedScript.version === undefined) {
+        migratedScript.version = 1;
+        migrationOccurred = true;
+      }
+      
+      // Add requireApproval field if missing (v2 requirement)
+      if (migratedScript.requireApproval === undefined) {
+        // Auto-determine based on tags if present
+        migratedScript.requireApproval = script.tags 
+          ? TagManager.shouldRequireApproval(script.tags)
+          : false;
+        migrationOccurred = true;
+      }
+      
+      // Add changelog field if missing (v2 requirement)
+      if (migratedScript.changelog === undefined) {
+        migratedScript.changelog = [];
+        migrationOccurred = true;
+      }
+      
+      // Normalize tags if present
+      if (migratedScript.tags) {
+        const normalizedTags = TagManager.normalizeTags(migratedScript.tags);
+        if (JSON.stringify(normalizedTags) !== JSON.stringify(migratedScript.tags)) {
+          migratedScript.tags = normalizedTags;
+          migrationOccurred = true;
+        }
+      }
+      
+      migratedScripts[name] = migratedScript;
+    }
+    
+    if (migrationOccurred) {
+      return {
+        ...registry,
+        scripts: migratedScripts
+      };
+    }
+    
+    return registry;
   }
 
   /**
@@ -84,7 +155,7 @@ export class RegistryManager {
   }
 
   /**
-   * Add or update a script in the registry
+   * Add or update a script in the registry with version management
    */
   async saveScript(name: string, metadata: ScriptMetadata): Promise<void> {
     const registry = await this.readRegistry();
@@ -93,19 +164,80 @@ export class RegistryManager {
     const isUpdate = name in registry.scripts;
     const now = new Date().toISOString();
     
+    let newVersion = 1;
+    let changelog: ChangelogEntry[] = [];
+    
     if (isUpdate) {
-      // Update existing script, preserve creation info
+      // Update existing script, preserve creation info and increment version
       const existing = registry.scripts[name];
+      newVersion = (existing.version || 1) + 1;
+      changelog = existing.changelog || [];
+      
+      // Create changelog entry
+      const changelogEntry: ChangelogEntry = {
+        version: newVersion,
+        commit: '', // Will be filled by git manager if available
+        timestamp: now,
+        description: `Updated script from version ${existing.version || 1}`
+      };
+      
+      // Try to get current commit hash if git manager is available
+      if (this.gitManager) {
+        try {
+          changelogEntry.commit = await this.gitManager.getCurrentCommitHash();
+          changelogEntry.tag = `mcp-scripts/${name}@${newVersion}`;
+        } catch (error) {
+          // Git not available, continue without commit info
+        }
+      }
+      
+      changelog.push(changelogEntry);
+      
+      // Ensure tags are normalized
+      const tags = metadata.tags ? TagManager.normalizeTags(metadata.tags) : undefined;
+      
       registry.scripts[name] = {
         ...metadata,
+        name,
+        tags,
+        version: newVersion,
+        requireApproval: metadata.requireApproval ?? (tags ? TagManager.shouldRequireApproval(tags) : false),
+        changelog,
         updatedAt: now,
         createdAt: existing.createdAt,
         createdBy: existing.createdBy,
       };
     } else {
       // New script
+      const tags = metadata.tags ? TagManager.normalizeTags(metadata.tags) : undefined;
+      
+      // Create initial changelog entry
+      const initialChangelogEntry: ChangelogEntry = {
+        version: 1,
+        commit: '',
+        timestamp: now,
+        description: 'Initial script creation'
+      };
+      
+      // Try to get current commit hash if git manager is available
+      if (this.gitManager) {
+        try {
+          initialChangelogEntry.commit = await this.gitManager.getCurrentCommitHash();
+          initialChangelogEntry.tag = `mcp-scripts/${name}@1`;
+        } catch (error) {
+          // Git not available, continue without commit info
+        }
+      }
+      
+      changelog = [initialChangelogEntry];
+      
       registry.scripts[name] = {
         ...metadata,
+        name,
+        tags,
+        version: 1,
+        requireApproval: metadata.requireApproval ?? (tags ? TagManager.shouldRequireApproval(tags) : false),
+        changelog,
         createdAt: now,
         updatedAt: now,
       };
@@ -253,7 +385,7 @@ export class RegistryManager {
   }
 
   /**
-   * Get registry statistics
+   * Get registry statistics with v2 schema information
    */
   async getStats(): Promise<{
     totalScripts: number;
@@ -261,6 +393,10 @@ export class RegistryManager {
     scriptsWithTtl: number;
     scriptsWithoutTtl: number;
     scriptsNeverUsed: number;
+    scriptsByRisk: Record<string, number>;
+    scriptsByDomain: Record<string, number>;
+    requireApprovalCount: number;
+    averageVersion: number;
   }> {
     const registry = await this.readRegistry();
     const scripts = Object.values(registry.scripts);
@@ -273,6 +409,27 @@ export class RegistryManager {
     const scriptsWithTtl = scripts.filter(s => s.ttlSeconds !== null).length;
     const scriptsWithoutTtl = scripts.filter(s => s.ttlSeconds === null).length;
     const scriptsNeverUsed = scripts.filter(s => !s.lastUsedAt).length;
+    const requireApprovalCount = scripts.filter(s => s.requireApproval).length;
+    
+    // Analyze tags
+    const scriptsByRisk: Record<string, number> = {};
+    const scriptsByDomain: Record<string, number> = {};
+    
+    scripts.forEach(script => {
+      if (script.tags) {
+        script.tags.forEach(tag => {
+          if (tag.startsWith('risk:')) {
+            scriptsByRisk[tag] = (scriptsByRisk[tag] || 0) + 1;
+          } else if (tag.startsWith('domain:')) {
+            scriptsByDomain[tag] = (scriptsByDomain[tag] || 0) + 1;
+          }
+        });
+      }
+    });
+    
+    // Calculate average version
+    const totalVersions = scripts.reduce((sum, script) => sum + (script.version || 1), 0);
+    const averageVersion = scripts.length > 0 ? totalVersions / scripts.length : 0;
     
     return {
       totalScripts: scripts.length,
@@ -280,6 +437,57 @@ export class RegistryManager {
       scriptsWithTtl,
       scriptsWithoutTtl,
       scriptsNeverUsed,
+      scriptsByRisk,
+      scriptsByDomain,
+      requireApprovalCount,
+      averageVersion,
+    };
+  }
+
+  /**
+   * Get script version history
+   */
+  async getScriptVersionHistory(name: string): Promise<ChangelogEntry[]> {
+    const script = await this.getScript(name);
+    return script?.changelog || [];
+  }
+
+  /**
+   * Get scripts that require approval
+   */
+  async getScriptsRequiringApproval(): Promise<ScriptMetadata[]> {
+    const registry = await this.readRegistry();
+    return Object.values(registry.scripts).filter(script => script.requireApproval);
+  }
+
+  /**
+   * Update script approval requirement
+   */
+  async setScriptApprovalRequirement(name: string, requireApproval: boolean): Promise<boolean> {
+    const registry = await this.readRegistry();
+    
+    if (!(name in registry.scripts)) {
+      return false; // Script not found
+    }
+    
+    registry.scripts[name].requireApproval = requireApproval;
+    registry.scripts[name].updatedAt = new Date().toISOString();
+    
+    await this.writeRegistry(registry);
+    return true;
+  }
+
+  /**
+   * Validate and normalize script tags
+   */
+  validateScriptTags(tags: string[]): { valid: boolean; normalized: string[]; errors: string[] } {
+    const validation = TagManager.validateTags(tags);
+    const normalized = TagManager.normalizeTags([...validation.structured, ...validation.unstructured]);
+    
+    return {
+      valid: validation.valid,
+      normalized,
+      errors: validation.invalid.map(tag => `Invalid tag: ${tag}`)
     };
   }
 }

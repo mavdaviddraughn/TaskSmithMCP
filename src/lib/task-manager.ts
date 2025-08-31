@@ -58,6 +58,9 @@ export class TaskManager {
         throw new Error('TaskManager requires a Git repository');
       }
       
+      // Inject git manager into registry manager for changelog tracking
+      this.registryManager.setGitManager(this.gitManager);
+      
       // TODO: Load configuration from disk if it exists
       
       this.initialized = true;
@@ -132,8 +135,11 @@ export class TaskManager {
       await this.registryManager!.saveScript(options.name, scriptMetadata);
       
       // Stage files for git commit
-      const relativeScriptPath = scriptPath.replace(context.repoRoot + '/', '');
-      await this.gitManager!.stageFiles([relativeScriptPath, 'scripts/meta/scripts.json']);
+      // Make paths relative to repository root
+      const relativeScriptPath = scriptPath.replace(`${context.repoRoot}\\`, '').replace(`${context.repoRoot}/`, '');
+      const relativeRegistryPath = this.pathManager.getRegistryPath().replace(`${context.repoRoot}\\`, '').replace(`${context.repoRoot}/`, '');
+      
+      await this.gitManager!.stageFiles([relativeScriptPath, relativeRegistryPath]);
       
       // Validate one-script-per-commit policy
       const validation = await this.gitManager!.validateOneScriptPerCommit(
@@ -386,5 +392,68 @@ export class TaskManager {
   getGitManager(): GitManager {
     this.ensureInitialized();
     return this.gitManager!;
+  }
+
+  // Schema v2 Methods
+
+  /**
+   * Get script version history
+   */
+  async getScriptVersionHistory(options: { name: string }): Promise<{ success: boolean; changelog?: any[]; message?: string }> {
+    this.ensureInitialized();
+    
+    try {
+      const changelog = await this.registryManager!.getScriptVersionHistory(options.name);
+      return { success: true, changelog };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Failed to get version history: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
+  }
+
+  /**
+   * Get scripts requiring approval
+   */
+  async getScriptsRequiringApproval(): Promise<ScriptMetadata[]> {
+    this.ensureInitialized();
+    return await this.registryManager!.getScriptsRequiringApproval();
+  }
+
+  /**
+   * Set script approval requirement
+   */
+  async setScriptApprovalRequirement(options: { name: string; requireApproval: boolean }): Promise<{ success: boolean; message?: string }> {
+    this.ensureInitialized();
+    
+    try {
+      const success = await this.registryManager!.setScriptApprovalRequirement(options.name, options.requireApproval);
+      if (!success) {
+        return { success: false, message: `Script '${options.name}' not found` };
+      }
+      return { success: true };
+    } catch (error) {
+      return { 
+        success: false, 
+        message: `Failed to set approval requirement: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
+  }
+
+  /**
+   * Validate script tags
+   */
+  validateScriptTags(tags: string[]): { valid: boolean; normalized: string[]; errors: string[] } {
+    this.ensureInitialized();
+    return this.registryManager!.validateScriptTags(tags);
+  }
+
+  /**
+   * Get enhanced registry statistics
+   */
+  async getRegistryStats(): Promise<any> {
+    this.ensureInitialized();
+    return await this.registryManager!.getStats();
   }
 }

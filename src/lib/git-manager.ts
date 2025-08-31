@@ -259,11 +259,13 @@ export class GitManager {
     
     for (const file of stagedFiles) {
       const fileName = basename(file);
+      const normalizedFile = file.replace(/\\/g, '/'); // Normalize path separators
+      const normalizedScriptsDir = scriptsDir.replace(/\\/g, '/');
       
-      if (file.startsWith(scriptsDir) && !file.includes('/meta/') && 
+      if (normalizedFile.startsWith(normalizedScriptsDir) && !normalizedFile.includes('/meta/') && 
           (file.endsWith('.ps1') || file.endsWith('.sh') || file.endsWith('.cmd'))) {
         scriptFiles.push(file);
-      } else if (file.includes('/meta/scripts.json')) {
+      } else if (normalizedFile.includes('/meta/scripts.json') || normalizedFile.includes('\\meta\\scripts.json')) {
         registryFiles.push(file);
       } else {
         otherFiles.push(file);
