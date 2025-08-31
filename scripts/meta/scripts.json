@@ -368,17 +368,17 @@
       "name": "test-update-script-1756652747662",
       "shell": "pwsh",
       "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-update-script-1756652747662.ps1",
-      "description": "Initial version",
+      "description": "Updated version",
       "tags": [],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T15:05:47.667Z",
-      "updatedAt": "2025-08-31T15:05:47.667Z",
+      "updatedAt": "2025-08-31T15:05:48.704Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 1,
+      "version": 2,
       "requireApproval": false,
       "changelog": [
         {
@@ -387,6 +387,13 @@
           "timestamp": "2025-08-31T15:05:47.667Z",
           "description": "Initial script creation",
           "tag": "mcp-scripts/test-update-script-1756652747662@1"
+        },
+        {
+          "version": 2,
+          "commit": "af9db0b41b3db7f35e0dec3e8e0df139f8371595",
+          "timestamp": "2025-08-31T15:05:48.704Z",
+          "description": "Updated script from version 1",
+          "tag": "mcp-scripts/test-update-script-1756652747662@2"
         }
       ]
     }
