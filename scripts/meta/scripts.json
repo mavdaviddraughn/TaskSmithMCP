@@ -263,11 +263,11 @@
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T00:38:00.919Z",
-      "updatedAt": "2025-08-31T00:38:00.919Z",
+      "updatedAt": "2025-08-31T00:38:48.734Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 1,
+      "version": 2,
       "requireApproval": false,
       "changelog": [
         {
@@ -276,6 +276,13 @@
           "timestamp": "2025-08-31T00:38:00.919Z",
           "description": "Initial script creation",
           "tag": "mcp-scripts/stats-test-1@1"
+        },
+        {
+          "version": 2,
+          "commit": "395a03109db8f384a37e30c20e8fae77fe0ae2bb",
+          "timestamp": "2025-08-31T00:38:48.734Z",
+          "description": "Updated script from version 1",
+          "tag": "mcp-scripts/stats-test-1@2"
         }
       ]
     },
