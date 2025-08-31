@@ -490,6 +490,32 @@
           "tag": "mcp-scripts/test-file-structure@1"
         }
       ]
+    },
+    "export-test": {
+      "name": "export-test",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/export-test.ps1",
+      "description": "Test script for output export",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T20:44:38.952Z",
+      "updatedAt": "2025-08-31T20:44:38.952Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "81358018568afc1d040838db5b189a97ceecef16",
+          "timestamp": "2025-08-31T20:44:38.952Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/export-test@1"
+        }
+      ]
     }
   }
 }
