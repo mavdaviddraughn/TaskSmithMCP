@@ -1,0 +1,1 @@
+echo "Manual tag test"
