@@ -212,11 +212,11 @@
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T00:37:59.661Z",
-      "updatedAt": "2025-08-31T00:39:05.445Z",
+      "updatedAt": "2025-08-31T00:38:47.400Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 3,
+      "version": 2,
       "requireApproval": false,
       "changelog": [
         {
@@ -232,13 +232,6 @@
           "timestamp": "2025-08-31T00:38:47.400Z",
           "description": "Updated script from version 1",
           "tag": "mcp-scripts/manual-tag-test@2"
-        },
-        {
-          "version": 3,
-          "commit": "88dc5d6c242d132afb80f800793248f19cdde2b8",
-          "timestamp": "2025-08-31T00:39:05.445Z",
-          "description": "Updated script from version 2",
-          "tag": "mcp-scripts/manual-tag-test@3"
         }
       ]
     },
@@ -311,6 +304,35 @@
           "timestamp": "2025-08-31T00:38:49.647Z",
           "description": "Updated script from version 1",
           "tag": "mcp-scripts/stats-test-2@2"
+        }
+      ]
+    },
+    "test-file-structure": {
+      "name": "test-file-structure",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-file-structure.ps1",
+      "description": "Testing file structure creation",
+      "tags": [
+        "structure",
+        "test"
+      ],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T00:39:05.810Z",
+      "updatedAt": "2025-08-31T00:39:05.810Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "88dc5d6c242d132afb80f800793248f19cdde2b8",
+          "timestamp": "2025-08-31T00:39:05.810Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/test-file-structure@1"
         }
       ]
     }
