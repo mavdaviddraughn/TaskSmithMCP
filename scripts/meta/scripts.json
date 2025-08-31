@@ -350,17 +350,20 @@
         }
       ]
     },
-    "tag-test-script": {
-      "name": "tag-test-script",
+    "test-script": {
+      "name": "test-script",
       "shell": "pwsh",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/tag-test-script.ps1",
-      "description": "Script for tag testing",
-      "tags": [],
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-script.ps1",
+      "description": "Test PowerShell script",
+      "tags": [
+        "demo",
+        "test"
+      ],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
-      "createdAt": "2025-08-31T15:05:43.214Z",
-      "updatedAt": "2025-08-31T15:05:43.214Z",
+      "createdAt": "2025-08-31T15:05:44.024Z",
+      "updatedAt": "2025-08-31T15:05:44.024Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
@@ -369,10 +372,10 @@
       "changelog": [
         {
           "version": 1,
-          "commit": "cbd3668adcd0da772a2f880ecdc602dc452eaf0d",
-          "timestamp": "2025-08-31T15:05:43.214Z",
+          "commit": "dbaa9aca44c14d4734665e9291563a46467c86dd",
+          "timestamp": "2025-08-31T15:05:44.024Z",
           "description": "Initial script creation",
-          "tag": "mcp-scripts/tag-test-script@1"
+          "tag": "mcp-scripts/test-script@1"
         }
       ]
     }
