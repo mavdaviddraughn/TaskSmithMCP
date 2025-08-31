@@ -169,6 +169,32 @@
           "tag": "mcp-scripts/test-file-structure@1"
         }
       ]
+    },
+    "enhanced-test-script": {
+      "name": "enhanced-test-script",
+      "shell": "bash",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/bash/enhanced-test-script.sh",
+      "description": "Initial version",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T00:37:54.721Z",
+      "updatedAt": "2025-08-31T00:37:54.721Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "32c68528335b230aef2e88e2993a3e668dcbd7a7",
+          "timestamp": "2025-08-31T00:37:54.721Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/enhanced-test-script@1"
+        }
+      ]
     }
   }
 }
