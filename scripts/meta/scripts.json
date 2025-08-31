@@ -447,6 +447,32 @@
           "tag": "mcp-scripts/format-test@1"
         }
       ]
+    },
+    "test-delete-script": {
+      "name": "test-delete-script",
+      "shell": "cmd",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/cmd/test-delete-script.cmd",
+      "description": "Script to be deleted",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T20:44:33.119Z",
+      "updatedAt": "2025-08-31T20:44:33.119Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "72b5022709a17a1f7900a71af99bffdb341da69b",
+          "timestamp": "2025-08-31T20:44:33.119Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/test-delete-script@1"
+        }
+      ]
     }
   }
 }
