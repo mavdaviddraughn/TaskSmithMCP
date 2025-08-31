@@ -286,39 +286,6 @@
           "tag": "mcp-scripts/stats-test-2@1"
         }
       ]
-    },
-    "enhanced-test-script": {
-      "name": "enhanced-test-script",
-      "shell": "bash",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/bash/enhanced-test-script.sh",
-      "description": "Enhanced version",
-      "tags": [],
-      "ttlSeconds": null,
-      "cwdStrategy": "repoRoot",
-      "argsSchema": null,
-      "createdAt": "2025-08-31T00:38:42.512Z",
-      "updatedAt": "2025-08-31T00:38:43.504Z",
-      "lastUsedAt": null,
-      "createdBy": "system",
-      "updatedBy": "system",
-      "version": 2,
-      "requireApproval": false,
-      "changelog": [
-        {
-          "version": 1,
-          "commit": "5c1f29b14a21d8fdbad8cd3fc7b9446bd015fb03",
-          "timestamp": "2025-08-31T00:38:42.512Z",
-          "description": "Initial script creation",
-          "tag": "mcp-scripts/enhanced-test-script@1"
-        },
-        {
-          "version": 2,
-          "commit": "d5c3356c9c715b8e7a19300bda0642496fdfc717",
-          "timestamp": "2025-08-31T00:38:43.504Z",
-          "description": "Updated script from version 1",
-          "tag": "mcp-scripts/enhanced-test-script@2"
-        }
-      ]
     }
   }
 }
