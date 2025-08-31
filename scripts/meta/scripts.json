@@ -174,17 +174,17 @@
       "name": "multi-version-script",
       "shell": "pwsh",
       "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/multi-version-script.ps1",
-      "description": "Version 1",
+      "description": "Version 2",
       "tags": [],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T00:37:57.269Z",
-      "updatedAt": "2025-08-31T00:38:44.976Z",
+      "updatedAt": "2025-08-31T00:38:45.875Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 3,
+      "version": 4,
       "requireApproval": false,
       "changelog": [
         {
@@ -207,6 +207,13 @@
           "timestamp": "2025-08-31T00:38:44.976Z",
           "description": "Updated script from version 2",
           "tag": "mcp-scripts/multi-version-script@3"
+        },
+        {
+          "version": 4,
+          "commit": "a0ddd19f9c79167e04d92210e119bac10d6883da",
+          "timestamp": "2025-08-31T00:38:45.875Z",
+          "description": "Updated script from version 3",
+          "tag": "mcp-scripts/multi-version-script@4"
         }
       ]
     },
