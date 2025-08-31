@@ -5,10 +5,15 @@ import {
   RunRecord,
   StaleReportItem,
   ServerConfig,
+  ArgumentValidationResult,
+  EnhancedRunExecutionOptions,
+  EnhancedSaveScriptOptions,
 } from '../types/index.js';
 import { PathManager } from './path-manager.js';
 import { RegistryManager } from './registry-manager.js';
 import { GitManager } from './git-manager.js';
+import { ParameterValidator } from './parameter-validator.js';
+import { ArgumentMaterializer } from './argument-materializer.js';
 import { promises as fs } from 'fs';
 import { dirname } from 'path';
 
@@ -17,6 +22,8 @@ export class TaskManager {
   private pathManager: PathManager;
   private registryManager: RegistryManager | null = null;
   private gitManager: GitManager | null = null;
+  private parameterValidator: ParameterValidator;
+  private argumentMaterializer: ArgumentMaterializer;
   private initialized = false;
 
   constructor() {
@@ -36,6 +43,8 @@ export class TaskManager {
     };
 
     this.pathManager = new PathManager();
+    this.parameterValidator = new ParameterValidator();
+    this.argumentMaterializer = new ArgumentMaterializer();
   }
 
   /**
@@ -190,6 +199,210 @@ export class TaskManager {
       return { 
         success: false, 
         message: `Failed to save script: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      };
+    }
+  }
+
+  /**
+   * Enhanced saveScript with argument schema validation (T126)
+   */
+  async saveScriptEnhanced(options: EnhancedSaveScriptOptions): Promise<{ success: boolean; message: string; version?: number }> {
+    // Validate argument schema if provided
+    if (options.argsSchema && (options.validateArgsSchema !== false)) {
+      const schemaValidation = this.parameterValidator.validateSchema(options.argsSchema);
+      if (!schemaValidation.valid) {
+        return {
+          success: false,
+          message: `Invalid arguments schema: ${schemaValidation.errors.join(', ')}`
+        };
+      }
+    }
+
+    // Call existing saveScript logic
+    const result = await this.saveScript(options);
+    return {
+      ...result,
+      version: 1 // TODO: Get actual version from registry v2
+    };
+  }
+
+  /**
+   * Validate arguments against a script schema without executing (T129)
+   */
+  async validateScriptArguments(
+    name: string,
+    args: (string | number | boolean)[]
+  ): Promise<{ success: boolean; message: string; validation?: ArgumentValidationResult }> {
+    this.ensureInitialized();
+    
+    const script = await this.registryManager!.getScript(name);
+    if (!script) {
+      return { success: false, message: `Script '${name}' not found` };
+    }
+
+    if (!script.argsSchema) {
+      return { success: true, message: 'No argument schema defined for this script' };
+    }
+
+    const validation = this.parameterValidator.validateArguments(script.argsSchema, args);
+    
+    if (!validation.valid) {
+      return {
+        success: false,
+        message: `Validation failed: ${validation.errors.join(', ')}`,
+        validation
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Arguments validated successfully',
+      validation
+    };
+  }
+
+  /**
+   * Preview how arguments will be materialized for shell execution (T127-T128)
+   */
+  async previewArgumentMaterialization(
+    name: string,
+    args: (string | number | boolean)[]
+  ): Promise<{ success: boolean; message: string; preview?: any }> {
+    this.ensureInitialized();
+    
+    const script = await this.registryManager!.getScript(name);
+    if (!script) {
+      return { success: false, message: `Script '${name}' not found` };
+    }
+
+    if (!script.argsSchema) {
+      return { 
+        success: true, 
+        message: 'No argument schema defined - arguments will be passed as-is',
+        preview: { 
+          originalArgs: args, 
+          materializedArgs: args.map(String),
+          shell: script.shell,
+          schema: null
+        }
+      };
+    }
+
+    const validation = this.parameterValidator.validateArguments(script.argsSchema, args);
+    
+    if (!validation.valid) {
+      return {
+        success: false,
+        message: `Validation failed: ${validation.errors.join(', ')}`
+      };
+    }
+
+    const materializedResult = await this.argumentMaterializer.materializeArguments(
+      {
+        shell: script.shell,
+        argsSchema: script.argsSchema,
+        providedArgs: args
+      },
+      validation
+    );
+
+    return {
+      success: true,
+      message: 'Argument materialization preview',
+      preview: {
+        originalArgs: args,
+        processedValues: materializedResult.processedValues,
+        materializedArgs: materializedResult.materializedArgs,
+        shell: script.shell,
+        schema: script.argsSchema
+      }
+    };
+  }
+
+  /**
+   * Enhanced runScript with typed parameter validation and materialization (T129)
+   */
+  async runScriptEnhanced(options: EnhancedRunExecutionOptions): Promise<any> {
+    this.ensureInitialized();
+    
+    try {
+      // Get script metadata
+      const script = await this.registryManager!.getScript(options.name);
+      if (!script) {
+        return { success: false, message: `Script '${options.name}' not found` };
+      }
+
+      // Validate and materialize arguments if schema exists
+      let validationResult: ArgumentValidationResult | null = null;
+      if (script.argsSchema && options.args) {
+        validationResult = this.parameterValidator.validateArguments(
+          script.argsSchema,
+          options.args
+        );
+
+        if (!validationResult.valid) {
+          return {
+            success: false,
+            message: `Argument validation failed: ${validationResult.errors.join(', ')}`
+          };
+        }
+
+        // Materialize arguments for shell execution
+        const materializedResult = await this.argumentMaterializer.materializeArguments(
+          {
+            shell: script.shell,
+            argsSchema: script.argsSchema,
+            providedArgs: options.args
+          },
+          validationResult
+        );
+
+        if (!materializedResult.valid) {
+          return {
+            success: false,
+            message: `Argument materialization failed: ${materializedResult.errors.join(', ')}`
+          };
+        }
+
+        validationResult = materializedResult;
+      }
+
+      // Handle special validation modes
+      if (options.validateOnly) {
+        return {
+          success: true,
+          message: 'Arguments validated successfully',
+          validation: validationResult
+        };
+      }
+
+      if (options.materializedPreview) {
+        return {
+          success: true,
+          message: 'Argument materialization preview',
+          validation: validationResult,
+          preview: {
+            originalArgs: options.args,
+            materializedArgs: validationResult?.materializedArgs || [],
+            processedValues: validationResult?.processedValues || {}
+          }
+        };
+      }
+
+      // Use materialized arguments for execution
+      const executionArgs = validationResult?.materializedArgs || options.args?.map(String) || [];
+
+      // TODO: Implement actual script execution with materialized args
+      return {
+        success: true,
+        message: 'Script execution would proceed with materialized arguments',
+        materializedArgs: executionArgs
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        message: `Script execution failed: ${error instanceof Error ? error.message : 'Unknown error'}`
       };
     }
   }

@@ -278,3 +278,95 @@ export const configure = {
   },
   additionalProperties: false,
 };
+
+// Enhanced save script with schema validation (T126)
+export const saveScriptEnhanced = {
+  ...saveScript,
+  properties: {
+    ...saveScript.properties,
+    validateArgsSchema: {
+      type: 'boolean',
+      default: true,
+      description: 'Validate the arguments schema on save',
+    },
+  },
+};
+
+// Validate arguments against script schema (T129)
+export const validateArguments = {
+  type: 'object',
+  required: ['name', 'args'],
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Name of the script to validate arguments for',
+    },
+    args: {
+      type: 'array',
+      items: {
+        type: ['string', 'number', 'boolean'],
+      },
+      description: 'Arguments to validate against the script schema',
+    },
+  },
+  additionalProperties: false,
+};
+
+// Preview argument materialization (T127-T128)
+export const previewArgumentMaterialization = {
+  type: 'object',
+  required: ['name', 'args'],
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Name of the script to preview argument materialization for',
+    },
+    args: {
+      type: 'array',
+      items: {
+        type: ['string', 'number', 'boolean'],
+      },
+      description: 'Arguments to materialize for shell execution',
+    },
+  },
+  additionalProperties: false,
+};
+
+// Enhanced runScript with validation options (T129)
+export const runScriptEnhanced = {
+  type: 'object',
+  required: ['name'],
+  properties: {
+    name: {
+      type: 'string',
+      description: 'Name of the script to run',
+    },
+    args: {
+      type: 'array',
+      items: {
+        type: ['string', 'number', 'boolean'],
+      },
+      description: 'Arguments to pass to the script (will be validated and materialized)',
+    },
+    stdin: {
+      type: ['string', 'null'],
+      description: 'Optional input piped to the process',
+    },
+    dryRun: {
+      type: 'boolean',
+      default: false,
+      description: 'Preview execution without running',
+    },
+    validateOnly: {
+      type: 'boolean',
+      default: false,
+      description: 'Only validate arguments without executing',
+    },
+    materializedPreview: {
+      type: 'boolean',
+      default: false,
+      description: 'Show how arguments will be materialized for shell execution',
+    },
+  },
+  additionalProperties: false,
+};

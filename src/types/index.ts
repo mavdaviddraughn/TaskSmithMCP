@@ -134,3 +134,28 @@ export interface PreviewLimits {
   stdout: number;
   stderr: number;
 }
+
+// Typed Parameters & JSON Schema Validation (T126-T129)
+export interface ArgumentValidationResult {
+  valid: boolean;
+  errors: string[];
+  materializedArgs: string[]; // For shell execution
+  processedValues: Record<string, any>; // Original typed values
+}
+
+export interface ParameterMaterializationOptions {
+  shell: 'pwsh' | 'bash' | 'cmd';
+  argsSchema: object;
+  providedArgs: (string | number | boolean)[];
+}
+
+// Enhanced types for parameter schema features
+export interface EnhancedRunExecutionOptions extends RunExecutionOptions {
+  validateOnly?: boolean; // Just validate args without running
+  materializedPreview?: boolean; // Show how args will be materialized
+}
+
+// Schema-aware save options
+export interface EnhancedSaveScriptOptions extends SaveScriptOptions {
+  validateArgsSchema?: boolean; // Validate the schema itself on save
+}
