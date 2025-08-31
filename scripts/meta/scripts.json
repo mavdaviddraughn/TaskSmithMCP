@@ -145,17 +145,17 @@
       "name": "multi-version-script",
       "shell": "pwsh",
       "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/multi-version-script.ps1",
-      "description": "Version 2",
+      "description": "Version 1",
       "tags": [],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T00:37:57.269Z",
-      "updatedAt": "2025-08-31T15:05:48.173Z",
+      "updatedAt": "2025-08-31T20:44:30.850Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 8,
+      "version": 9,
       "requireApproval": false,
       "changelog": [
         {
@@ -213,6 +213,13 @@
           "timestamp": "2025-08-31T15:05:48.173Z",
           "description": "Updated script from version 7",
           "tag": "mcp-scripts/multi-version-script@8"
+        },
+        {
+          "version": 9,
+          "commit": "0dc7b236426d145ab3d13f6534d43d69bfff41b2",
+          "timestamp": "2025-08-31T20:44:30.850Z",
+          "description": "Updated script from version 8",
+          "tag": "mcp-scripts/multi-version-script@9"
         }
       ]
     },
@@ -399,11 +406,11 @@
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T20:44:25.614Z",
-      "updatedAt": "2025-08-31T20:44:30.992Z",
-      "lastUsedAt": "2025-08-31T20:44:30.988Z",
+      "updatedAt": "2025-08-31T20:44:25.614Z",
+      "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 2,
+      "version": 1,
       "requireApproval": false,
       "changelog": [
         {
@@ -412,13 +419,6 @@
           "timestamp": "2025-08-31T20:44:25.614Z",
           "description": "Initial script creation",
           "tag": "mcp-scripts/streaming-test@1"
-        },
-        {
-          "version": 2,
-          "commit": "0dc7b236426d145ab3d13f6534d43d69bfff41b2",
-          "timestamp": "2025-08-31T20:44:30.992Z",
-          "description": "Updated script from version 1",
-          "tag": "mcp-scripts/streaming-test@2"
         }
       ]
     }
