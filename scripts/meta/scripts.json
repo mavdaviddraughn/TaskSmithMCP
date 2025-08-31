@@ -527,11 +527,11 @@
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T20:44:40.161Z",
-      "updatedAt": "2025-08-31T20:44:40.161Z",
-      "lastUsedAt": null,
+      "updatedAt": "2025-08-31T20:44:44.755Z",
+      "lastUsedAt": "2025-08-31T20:44:44.752Z",
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 1,
+      "version": 2,
       "requireApproval": false,
       "changelog": [
         {
@@ -540,6 +540,39 @@
           "timestamp": "2025-08-31T20:44:40.161Z",
           "description": "Initial script creation",
           "tag": "mcp-scripts/volume-test@1"
+        },
+        {
+          "version": 2,
+          "commit": "59426c592217780e2559b58b12c620a46a5f3cef",
+          "timestamp": "2025-08-31T20:44:44.755Z",
+          "description": "Updated script from version 1",
+          "tag": "mcp-scripts/volume-test@2"
+        }
+      ]
+    },
+    "concurrent-2": {
+      "name": "concurrent-2",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/concurrent-2.ps1",
+      "description": "Concurrent test 2",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T20:44:45.381Z",
+      "updatedAt": "2025-08-31T20:44:45.381Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "59426c592217780e2559b58b12c620a46a5f3cef",
+          "timestamp": "2025-08-31T20:44:45.381Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/concurrent-2@1"
         }
       ]
     }
