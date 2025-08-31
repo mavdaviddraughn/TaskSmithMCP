@@ -439,11 +439,11 @@
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T20:44:32.541Z",
-      "updatedAt": "2025-08-31T20:44:32.541Z",
-      "lastUsedAt": null,
+      "updatedAt": "2025-08-31T20:44:37.929Z",
+      "lastUsedAt": "2025-08-31T20:44:37.924Z",
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 1,
+      "version": 2,
       "requireApproval": false,
       "changelog": [
         {
@@ -452,6 +452,13 @@
           "timestamp": "2025-08-31T20:44:32.541Z",
           "description": "Initial script creation",
           "tag": "mcp-scripts/format-test@1"
+        },
+        {
+          "version": 2,
+          "commit": "e2ee93d4dfd2557f7f4cbdb810c124b29c37e1b1",
+          "timestamp": "2025-08-31T20:44:37.929Z",
+          "description": "Updated script from version 1",
+          "tag": "mcp-scripts/format-test@2"
         }
       ]
     },
