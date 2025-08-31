@@ -145,17 +145,17 @@
       "name": "multi-version-script",
       "shell": "pwsh",
       "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/multi-version-script.ps1",
-      "description": "Version 1",
+      "description": "Version 2",
       "tags": [],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T00:37:57.269Z",
-      "updatedAt": "2025-08-31T00:39:02.330Z",
+      "updatedAt": "2025-08-31T00:39:03.304Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 5,
+      "version": 6,
       "requireApproval": false,
       "changelog": [
         {
@@ -192,6 +192,13 @@
           "timestamp": "2025-08-31T00:39:02.330Z",
           "description": "Updated script from version 4",
           "tag": "mcp-scripts/multi-version-script@5"
+        },
+        {
+          "version": 6,
+          "commit": "a8f3282027b066440172e359561350890dacf709",
+          "timestamp": "2025-08-31T00:39:03.304Z",
+          "description": "Updated script from version 5",
+          "tag": "mcp-scripts/multi-version-script@6"
         }
       ]
     },
@@ -297,32 +304,6 @@
           "timestamp": "2025-08-31T00:38:49.647Z",
           "description": "Updated script from version 1",
           "tag": "mcp-scripts/stats-test-2@2"
-        }
-      ]
-    },
-    "test-update-script-1756600741970": {
-      "name": "test-update-script-1756600741970",
-      "shell": "pwsh",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-update-script-1756600741970.ps1",
-      "description": "Updated version",
-      "tags": [],
-      "ttlSeconds": null,
-      "cwdStrategy": "repoRoot",
-      "argsSchema": null,
-      "createdAt": "2025-08-31T00:39:02.985Z",
-      "updatedAt": "2025-08-31T00:39:02.985Z",
-      "lastUsedAt": null,
-      "createdBy": "system",
-      "updatedBy": "system",
-      "version": 1,
-      "requireApproval": false,
-      "changelog": [
-        {
-          "version": 1,
-          "commit": "cbb68e6d1e496638f47c59aa08073347f6ba614d",
-          "timestamp": "2025-08-31T00:39:02.985Z",
-          "description": "Initial script creation",
-          "tag": "mcp-scripts/test-update-script-1756600741970@1"
         }
       ]
     }
