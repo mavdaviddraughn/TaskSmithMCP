@@ -89,20 +89,20 @@
         }
       ]
     },
-    "test-file-structure": {
-      "name": "test-file-structure",
+    "test-script": {
+      "name": "test-script",
       "shell": "pwsh",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-file-structure.ps1",
-      "description": "Testing file structure creation",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-script.ps1",
+      "description": "Test PowerShell script",
       "tags": [
-        "structure",
+        "demo",
         "test"
       ],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
-      "createdAt": "2025-08-31T00:29:36.939Z",
-      "updatedAt": "2025-08-31T00:29:36.939Z",
+      "createdAt": "2025-08-31T00:30:37.431Z",
+      "updatedAt": "2025-08-31T00:30:37.431Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
@@ -111,10 +111,10 @@
       "changelog": [
         {
           "version": 1,
-          "commit": "fe45638072099f842feb798574a01a9c8cb14ce2",
-          "timestamp": "2025-08-31T00:29:36.939Z",
+          "commit": "31a01e7b988e368d9db4eab6f9cc54e0d9832195",
+          "timestamp": "2025-08-31T00:30:37.431Z",
           "description": "Initial script creation",
-          "tag": "mcp-scripts/test-file-structure@1"
+          "tag": "mcp-scripts/test-script@1"
         }
       ]
     }
