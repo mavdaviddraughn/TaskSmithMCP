@@ -169,6 +169,32 @@
           "tag": "mcp-scripts/test-file-structure@1"
         }
       ]
+    },
+    "multi-version-script": {
+      "name": "multi-version-script",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/multi-version-script.ps1",
+      "description": "Version 1",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T00:37:57.269Z",
+      "updatedAt": "2025-08-31T00:37:57.269Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "af13204c7a1b4a0960ea4fc35f92f6ff1d379892",
+          "timestamp": "2025-08-31T00:37:57.269Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/multi-version-script@1"
+        }
+      ]
     }
   }
 }
