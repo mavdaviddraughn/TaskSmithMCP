@@ -319,11 +319,11 @@
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
       "createdAt": "2025-08-31T00:38:01.951Z",
-      "updatedAt": "2025-08-31T00:39:08.847Z",
+      "updatedAt": "2025-08-31T15:05:52.353Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
-      "version": 3,
+      "version": 4,
       "requireApproval": true,
       "changelog": [
         {
@@ -346,6 +346,13 @@
           "timestamp": "2025-08-31T00:39:08.847Z",
           "description": "Updated script from version 2",
           "tag": "mcp-scripts/stats-test-2@3"
+        },
+        {
+          "version": 4,
+          "commit": "907afaa64d328987f1143977b2bad33d8c0b8b03",
+          "timestamp": "2025-08-31T15:05:52.353Z",
+          "description": "Updated script from version 3",
+          "tag": "mcp-scripts/stats-test-2@4"
         }
       ]
     },
