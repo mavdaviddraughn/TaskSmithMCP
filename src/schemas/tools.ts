@@ -83,6 +83,262 @@ export const runScript = {
       default: false,
       description: 'Preview execution without running',
     },
+    outputOptions: {
+      type: 'object',
+      description: 'Output management configuration',
+      properties: {
+        streaming: {
+          type: 'object',
+          description: 'Stream buffer configuration',
+          properties: {
+            stdout: {
+              type: 'object',
+              properties: {
+                maxLines: {
+                  type: 'integer',
+                  minimum: 100,
+                  default: 10000,
+                  description: 'Maximum lines to buffer for stdout',
+                },
+                retentionMs: {
+                  type: 'integer',
+                  minimum: 1000,
+                  default: 86400000,
+                  description: 'How long to retain output in milliseconds (24h default)',
+                },
+                maxMemoryBytes: {
+                  type: 'integer',
+                  minimum: 1024,
+                  default: 52428800,
+                  description: 'Maximum memory usage in bytes (50MB default)',
+                },
+              },
+              additionalProperties: false,
+            },
+            stderr: {
+              type: 'object',
+              properties: {
+                maxLines: {
+                  type: 'integer',
+                  minimum: 100,
+                  default: 5000,
+                  description: 'Maximum lines to buffer for stderr',
+                },
+                retentionMs: {
+                  type: 'integer',
+                  minimum: 1000,
+                  default: 86400000,
+                  description: 'How long to retain output in milliseconds (24h default)',
+                },
+                maxMemoryBytes: {
+                  type: 'integer',
+                  minimum: 1024,
+                  default: 26214400,
+                  description: 'Maximum memory usage in bytes (25MB default)',
+                },
+              },
+              additionalProperties: false,
+            },
+            errorPatterns: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Regex patterns to identify error lines',
+              default: ['error:', 'exception:', 'fatal:', 'failed:'],
+            },
+            warningPatterns: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Regex patterns to identify warning lines',
+              default: ['warning:', 'warn:', 'deprecated'],
+            },
+          },
+          additionalProperties: false,
+        },
+        progress: {
+          type: 'object',
+          description: 'Progress tracking configuration',
+          properties: {
+            enabled: {
+              type: 'boolean',
+              default: true,
+              description: 'Enable progress indicators',
+            },
+            style: {
+              type: 'string',
+              enum: ['spinner', 'bar', 'dots', 'silent'],
+              default: 'spinner',
+              description: 'Progress indicator style',
+            },
+            updateIntervalMs: {
+              type: 'integer',
+              minimum: 50,
+              default: 100,
+              description: 'Update interval in milliseconds',
+            },
+            showETA: {
+              type: 'boolean',
+              default: true,
+              description: 'Show estimated time to completion',
+            },
+            showPhase: {
+              type: 'boolean',
+              default: true,
+              description: 'Show current execution phase',
+            },
+          },
+          additionalProperties: false,
+        },
+        formatting: {
+          type: 'object',
+          description: 'Output formatting options',
+          properties: {
+            colorScheme: {
+              type: 'string',
+              enum: ['dark', 'light', 'none'],
+              default: 'dark',
+              description: 'Color scheme for output',
+            },
+            syntaxHighlighting: {
+              type: 'boolean',
+              default: true,
+              description: 'Enable syntax highlighting',
+            },
+            timestampFormat: {
+              type: 'string',
+              enum: ['iso', 'relative', 'elapsed', 'none'],
+              default: 'iso',
+              description: 'Timestamp format in output',
+            },
+            includeMetadata: {
+              type: 'boolean',
+              default: true,
+              description: 'Include execution metadata',
+            },
+          },
+          additionalProperties: false,
+        },
+        filtering: {
+          type: 'object',
+          description: 'Output filtering configuration',
+          properties: {
+            levels: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['debug', 'info', 'warn', 'error'],
+              },
+              description: 'Log levels to include',
+              default: ['info', 'warn', 'error'],
+            },
+            keywords: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Keywords to filter for',
+            },
+            excludeKeywords: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Keywords to exclude',
+            },
+            regex: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Regex patterns to include',
+            },
+            excludeRegex: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Regex patterns to exclude',
+            },
+            timeRange: {
+              type: 'object',
+              properties: {
+                start: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'Start time for filtering',
+                },
+                end: {
+                  type: 'string',
+                  format: 'date-time',
+                  description: 'End time for filtering',
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+          additionalProperties: false,
+        },
+        caching: {
+          type: 'object',
+          description: 'Result caching configuration',
+          properties: {
+            maxEntries: {
+              type: 'integer',
+              minimum: 10,
+              default: 1000,
+              description: 'Maximum cache entries',
+            },
+            maxMemoryBytes: {
+              type: 'integer',
+              minimum: 1024,
+              default: 104857600,
+              description: 'Maximum cache memory usage (100MB default)',
+            },
+            ttlMs: {
+              type: 'integer',
+              minimum: 1000,
+              default: 604800000,
+              description: 'Cache TTL in milliseconds (7 days default)',
+            },
+            compression: {
+              type: 'boolean',
+              default: true,
+              description: 'Enable result compression',
+            },
+            persistToDisk: {
+              type: 'boolean',
+              default: true,
+              description: 'Persist cache to disk',
+            },
+          },
+          additionalProperties: false,
+        },
+        export: {
+          type: 'object',
+          description: 'Export configuration',
+          properties: {
+            format: {
+              type: 'string',
+              enum: ['json', 'csv', 'html', 'markdown', 'text'],
+              default: 'json',
+              description: 'Export format',
+            },
+            includeMetadata: {
+              type: 'boolean',
+              default: true,
+              description: 'Include execution metadata in export',
+            },
+            compress: {
+              type: 'boolean',
+              default: false,
+              description: 'Compress exported output',
+            },
+            template: {
+              type: 'string',
+              description: 'Custom export template name',
+            },
+            streaming: {
+              type: 'boolean',
+              default: false,
+              description: 'Enable streaming export for large outputs',
+            },
+          },
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
+    },
   },
   additionalProperties: false,
 };
@@ -366,6 +622,333 @@ export const runScriptEnhanced = {
       type: 'boolean',
       default: false,
       description: 'Show how arguments will be materialized for shell execution',
+    },
+    outputOptions: {
+      type: 'object',
+      description: 'Advanced output management configuration (same as runScript)',
+      properties: {
+        streaming: {
+          type: 'object',
+          description: 'Stream buffer configuration',
+          properties: {
+            stdout: {
+              type: 'object',
+              properties: {
+                maxLines: { type: 'integer', minimum: 100, default: 10000 },
+                retentionMs: { type: 'integer', minimum: 1000, default: 86400000 },
+                maxMemoryBytes: { type: 'integer', minimum: 1024, default: 52428800 },
+              },
+              additionalProperties: false,
+            },
+            stderr: {
+              type: 'object',
+              properties: {
+                maxLines: { type: 'integer', minimum: 100, default: 5000 },
+                retentionMs: { type: 'integer', minimum: 1000, default: 86400000 },
+                maxMemoryBytes: { type: 'integer', minimum: 1024, default: 26214400 },
+              },
+              additionalProperties: false,
+            },
+            errorPatterns: {
+              type: 'array',
+              items: { type: 'string' },
+              default: ['error:', 'exception:', 'fatal:', 'failed:'],
+            },
+            warningPatterns: {
+              type: 'array',
+              items: { type: 'string' },
+              default: ['warning:', 'warn:', 'deprecated'],
+            },
+          },
+          additionalProperties: false,
+        },
+        progress: {
+          type: 'object',
+          properties: {
+            enabled: { type: 'boolean', default: true },
+            style: { type: 'string', enum: ['spinner', 'bar', 'dots', 'silent'], default: 'spinner' },
+            updateIntervalMs: { type: 'integer', minimum: 50, default: 100 },
+            showETA: { type: 'boolean', default: true },
+            showPhase: { type: 'boolean', default: true },
+          },
+          additionalProperties: false,
+        },
+        formatting: {
+          type: 'object',
+          properties: {
+            colorScheme: { type: 'string', enum: ['dark', 'light', 'none'], default: 'dark' },
+            syntaxHighlighting: { type: 'boolean', default: true },
+            timestampFormat: { type: 'string', enum: ['iso', 'relative', 'elapsed', 'none'], default: 'iso' },
+            includeMetadata: { type: 'boolean', default: true },
+          },
+          additionalProperties: false,
+        },
+        filtering: {
+          type: 'object',
+          properties: {
+            levels: {
+              type: 'array',
+              items: { type: 'string', enum: ['debug', 'info', 'warn', 'error'] },
+              default: ['info', 'warn', 'error'],
+            },
+            keywords: { type: 'array', items: { type: 'string' } },
+            excludeKeywords: { type: 'array', items: { type: 'string' } },
+            regex: { type: 'array', items: { type: 'string' } },
+            excludeRegex: { type: 'array', items: { type: 'string' } },
+            timeRange: {
+              type: 'object',
+              properties: {
+                start: { type: 'string', format: 'date-time' },
+                end: { type: 'string', format: 'date-time' },
+              },
+              additionalProperties: false,
+            },
+          },
+          additionalProperties: false,
+        },
+        caching: {
+          type: 'object',
+          properties: {
+            maxEntries: { type: 'integer', minimum: 10, default: 1000 },
+            maxMemoryBytes: { type: 'integer', minimum: 1024, default: 104857600 },
+            ttlMs: { type: 'integer', minimum: 1000, default: 604800000 },
+            compression: { type: 'boolean', default: true },
+            persistToDisk: { type: 'boolean', default: true },
+          },
+          additionalProperties: false,
+        },
+        export: {
+          type: 'object',
+          properties: {
+            format: { type: 'string', enum: ['json', 'csv', 'html', 'markdown', 'text'], default: 'json' },
+            includeMetadata: { type: 'boolean', default: true },
+            compress: { type: 'boolean', default: false },
+            template: { type: 'string' },
+            streaming: { type: 'boolean', default: false },
+          },
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+};
+
+// Output Management Tools (T130-T143)
+
+export const filterRunOutput = {
+  type: 'object',
+  required: ['runId'],
+  properties: {
+    runId: {
+      type: 'string',
+      description: 'Run ID to filter output for',
+    },
+    levels: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: ['debug', 'info', 'warn', 'error'],
+      },
+      description: 'Log levels to include',
+    },
+    keywords: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Keywords to search for',
+    },
+    excludeKeywords: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Keywords to exclude',
+    },
+    regex: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Regex patterns to include',
+    },
+    excludeRegex: {
+      type: 'array',
+      items: { type: 'string' },
+      description: 'Regex patterns to exclude',
+    },
+    timeRange: {
+      type: 'object',
+      properties: {
+        start: {
+          type: 'string',
+          format: 'date-time',
+          description: 'Start time for filtering',
+        },
+        end: {
+          type: 'string',
+          format: 'date-time',
+          description: 'End time for filtering',
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+};
+
+export const exportRunOutput = {
+  type: 'object',
+  required: ['runId', 'format'],
+  properties: {
+    runId: {
+      type: 'string',
+      description: 'Run ID to export output for',
+    },
+    format: {
+      type: 'string',
+      enum: ['json', 'csv', 'html', 'markdown', 'text'],
+      description: 'Export format',
+    },
+    filePath: {
+      type: 'string',
+      description: 'Optional custom export file path',
+    },
+    includeMetadata: {
+      type: 'boolean',
+      default: true,
+      description: 'Include execution metadata',
+    },
+    compress: {
+      type: 'boolean',
+      default: false,
+      description: 'Compress exported file',
+    },
+    template: {
+      type: 'string',
+      description: 'Custom template name',
+    },
+    filtering: {
+      type: 'object',
+      description: 'Filter output before export',
+      properties: {
+        levels: {
+          type: 'array',
+          items: {
+            type: 'string',
+            enum: ['debug', 'info', 'warn', 'error'],
+          },
+        },
+        keywords: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        excludeKeywords: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        regex: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+        excludeRegex: {
+          type: 'array',
+          items: { type: 'string' },
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+};
+
+export const searchRunOutput = {
+  type: 'object',
+  required: ['runId', 'query'],
+  properties: {
+    runId: {
+      type: 'string',
+      description: 'Run ID to search output in',
+    },
+    query: {
+      type: 'string',
+      description: 'Search query (keyword or regex)',
+      minLength: 1,
+    },
+    regex: {
+      type: 'boolean',
+      default: false,
+      description: 'Treat query as regex pattern',
+    },
+    caseSensitive: {
+      type: 'boolean',
+      default: false,
+      description: 'Case-sensitive search',
+    },
+    contextLines: {
+      type: 'integer',
+      minimum: 0,
+      maximum: 10,
+      default: 2,
+      description: 'Lines of context around matches',
+    },
+    maxResults: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 1000,
+      default: 100,
+      description: 'Maximum number of results',
+    },
+  },
+  additionalProperties: false,
+};
+
+export const getRunProgress = {
+  type: 'object',
+  required: ['runId'],
+  properties: {
+    runId: {
+      type: 'string',
+      description: 'Run ID to get progress for',
+    },
+    includePhases: {
+      type: 'boolean',
+      default: true,
+      description: 'Include execution phase information',
+    },
+    includeETA: {
+      type: 'boolean',
+      default: true,
+      description: 'Include estimated time to completion',
+    },
+  },
+  additionalProperties: false,
+};
+
+export const clearResultCache = {
+  type: 'object',
+  properties: {
+    scriptName: {
+      type: 'string',
+      description: 'Clear cache for specific script only',
+    },
+    olderThan: {
+      type: 'string',
+      format: 'date-time',
+      description: 'Clear cache entries older than this timestamp',
+    },
+    sizeThreshold: {
+      type: 'integer',
+      minimum: 1024,
+      description: 'Clear cache if total size exceeds this (bytes)',
+    },
+  },
+  additionalProperties: false,
+};
+
+export const getCacheStats = {
+  type: 'object',
+  properties: {
+    detailed: {
+      type: 'boolean',
+      default: false,
+      description: 'Include detailed per-entry statistics',
     },
   },
   additionalProperties: false,

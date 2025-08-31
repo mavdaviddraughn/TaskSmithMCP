@@ -159,3 +159,97 @@ export interface EnhancedRunExecutionOptions extends RunExecutionOptions {
 export interface EnhancedSaveScriptOptions extends SaveScriptOptions {
   validateArgsSchema?: boolean; // Validate the schema itself on save
 }
+
+// Run Output Management (T130-T143)
+export interface OutputChunk {
+  content: string;
+  timestamp: Date;
+  source: 'stdout' | 'stderr';
+}
+
+export interface BufferConfig {
+  maxLines: number;
+  retentionMs: number;
+  maxMemoryBytes: number;
+}
+
+export interface StreamConfig {
+  stdout: BufferConfig;
+  stderr: BufferConfig;
+  errorPatterns: string[];
+  warningPatterns: string[];
+}
+
+export interface ProgressConfig {
+  enabled: boolean;
+  style: 'spinner' | 'bar' | 'dots' | 'silent';
+  updateIntervalMs: number;
+  showETA: boolean;
+  showPhase: boolean;
+}
+
+export interface FormatterConfig {
+  colorScheme: 'dark' | 'light' | 'none';
+  syntaxHighlighting: boolean;
+  timestampFormat: 'iso' | 'relative' | 'elapsed' | 'none';
+  includeMetadata: boolean;
+}
+
+export interface FilterConfig {
+  levels: ('debug' | 'info' | 'warn' | 'error')[];
+  keywords?: string[];
+  excludeKeywords?: string[];
+  regex?: string[];
+  excludeRegex?: string[];
+  timeRange?: {
+    start?: Date;
+    end?: Date;
+  };
+}
+
+export interface CacheConfig {
+  maxEntries: number;
+  maxMemoryBytes: number;
+  ttlMs: number;
+  compression: boolean;
+  persistToDisk: boolean;
+}
+
+export interface ExportConfig {
+  format: 'json' | 'csv' | 'html' | 'markdown' | 'text';
+  includeMetadata: boolean;
+  compress: boolean;
+  template?: string;
+  streaming?: boolean;
+}
+
+export interface OutputManagementOptions {
+  streaming?: StreamConfig;
+  progress?: ProgressConfig;
+  formatting?: FormatterConfig;
+  filtering?: FilterConfig;
+  caching?: CacheConfig;
+  export?: ExportConfig;
+}
+
+export interface OutputSearchResult {
+  chunk: OutputChunk;
+  matchIndex: number;
+  context: string;
+}
+
+export interface FilterResult {
+  chunks: OutputChunk[];
+  totalMatches: number;
+  totalFiltered: number;
+  executionTime: number;
+}
+
+export interface ExportResult {
+  success: boolean;
+  path?: string;
+  size: number;
+  format: string;
+  compressed: boolean;
+  error?: string;
+}
