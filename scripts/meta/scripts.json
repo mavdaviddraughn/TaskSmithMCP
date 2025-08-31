@@ -286,6 +286,32 @@
           "tag": "mcp-scripts/stats-test-2@1"
         }
       ]
+    },
+    "tag-test-script": {
+      "name": "tag-test-script",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/tag-test-script.ps1",
+      "description": "Script for tag testing",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T00:38:41.015Z",
+      "updatedAt": "2025-08-31T00:38:41.015Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "df988b32b5eead08884e92e52d41dde1c14320f7",
+          "timestamp": "2025-08-31T00:38:41.015Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/tag-test-script@1"
+        }
+      ]
     }
   }
 }
