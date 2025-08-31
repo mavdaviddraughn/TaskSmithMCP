@@ -516,6 +516,32 @@
           "tag": "mcp-scripts/export-test@1"
         }
       ]
+    },
+    "volume-test": {
+      "name": "volume-test",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/volume-test.ps1",
+      "description": "High volume output test",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T20:44:40.161Z",
+      "updatedAt": "2025-08-31T20:44:40.161Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "a44a1e7fdc9bf9c1eb4af704fca21aa682c92ffd",
+          "timestamp": "2025-08-31T20:44:40.161Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/volume-test@1"
+        }
+      ]
     }
   }
 }
