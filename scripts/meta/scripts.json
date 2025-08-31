@@ -415,32 +415,6 @@
         }
       ]
     },
-    "enhanced-test-script": {
-      "name": "enhanced-test-script",
-      "shell": "bash",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/bash/enhanced-test-script.sh",
-      "description": "Initial version",
-      "tags": [],
-      "ttlSeconds": null,
-      "cwdStrategy": "repoRoot",
-      "argsSchema": null,
-      "createdAt": "2025-08-31T20:44:27.132Z",
-      "updatedAt": "2025-08-31T20:44:27.132Z",
-      "lastUsedAt": null,
-      "createdBy": "system",
-      "updatedBy": "system",
-      "version": 1,
-      "requireApproval": false,
-      "changelog": [
-        {
-          "version": 1,
-          "commit": "b1ce8f619c052ae01cabe2aaf6b8d44aa1e7589b",
-          "timestamp": "2025-08-31T20:44:27.132Z",
-          "description": "Initial script creation",
-          "tag": "mcp-scripts/enhanced-test-script@1"
-        }
-      ]
-    },
     "test-script-2": {
       "name": "test-script-2",
       "shell": "bash",
