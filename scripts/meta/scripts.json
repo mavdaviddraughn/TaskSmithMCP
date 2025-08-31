@@ -356,6 +356,32 @@
           "tag": "mcp-scripts/test-file-structure@1"
         }
       ]
+    },
+    "test-update-script-1756652747662": {
+      "name": "test-update-script-1756652747662",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-update-script-1756652747662.ps1",
+      "description": "Initial version",
+      "tags": [],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T15:05:47.667Z",
+      "updatedAt": "2025-08-31T15:05:47.667Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "59153536cafa97d4670ed8ea6fac4cd03c33863b",
+          "timestamp": "2025-08-31T15:05:47.667Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/test-update-script-1756652747662@1"
+        }
+      ]
     }
   }
 }
