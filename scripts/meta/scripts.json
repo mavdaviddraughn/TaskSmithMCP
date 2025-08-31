@@ -389,17 +389,17 @@
         }
       ]
     },
-    "tag-test-script": {
-      "name": "tag-test-script",
+    "streaming-test": {
+      "name": "streaming-test",
       "shell": "pwsh",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/tag-test-script.ps1",
-      "description": "Script for tag testing",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/streaming-test.ps1",
+      "description": "Test script for streaming output",
       "tags": [],
       "ttlSeconds": null,
       "cwdStrategy": "repoRoot",
       "argsSchema": null,
-      "createdAt": "2025-08-31T20:44:25.818Z",
-      "updatedAt": "2025-08-31T20:44:25.818Z",
+      "createdAt": "2025-08-31T20:44:25.614Z",
+      "updatedAt": "2025-08-31T20:44:25.614Z",
       "lastUsedAt": null,
       "createdBy": "system",
       "updatedBy": "system",
@@ -409,9 +409,38 @@
         {
           "version": 1,
           "commit": "f7b550024189d45fc474f67cd2f93e69c164d0e3",
-          "timestamp": "2025-08-31T20:44:25.818Z",
+          "timestamp": "2025-08-31T20:44:25.614Z",
           "description": "Initial script creation",
-          "tag": "mcp-scripts/tag-test-script@1"
+          "tag": "mcp-scripts/streaming-test@1"
+        }
+      ]
+    },
+    "test-script": {
+      "name": "test-script",
+      "shell": "pwsh",
+      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-script.ps1",
+      "description": "Test PowerShell script",
+      "tags": [
+        "demo",
+        "test"
+      ],
+      "ttlSeconds": null,
+      "cwdStrategy": "repoRoot",
+      "argsSchema": null,
+      "createdAt": "2025-08-31T20:44:26.396Z",
+      "updatedAt": "2025-08-31T20:44:26.396Z",
+      "lastUsedAt": null,
+      "createdBy": "system",
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": [
+        {
+          "version": 1,
+          "commit": "f7b550024189d45fc474f67cd2f93e69c164d0e3",
+          "timestamp": "2025-08-31T20:44:26.396Z",
+          "description": "Initial script creation",
+          "tag": "mcp-scripts/test-script@1"
         }
       ]
     }
