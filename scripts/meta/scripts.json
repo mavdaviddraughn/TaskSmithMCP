@@ -14,7 +14,10 @@
       "updatedAt": "2025-08-30T22:06:45.438Z",
       "lastUsedAt": null,
       "createdBy": "system",
-      "updatedBy": "system"
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": []
     },
     "test-update-script-1756591764930": {
       "name": "test-update-script-1756591764930",
@@ -29,25 +32,10 @@
       "updatedAt": "2025-08-30T22:09:24.934Z",
       "lastUsedAt": null,
       "createdBy": "system",
-      "updatedBy": "system"
-    },
-    "test-file-structure": {
-      "name": "test-file-structure",
-      "shell": "pwsh",
-      "path": "C:\\Maverik\\TaskSmithMCP\\scripts/pwsh/test-file-structure.ps1",
-      "description": "Testing file structure creation",
-      "tags": [
-        "structure",
-        "test"
-      ],
-      "ttlSeconds": null,
-      "cwdStrategy": "repoRoot",
-      "argsSchema": null,
-      "createdAt": "2025-08-30T22:09:25.542Z",
-      "updatedAt": "2025-08-30T22:09:25.542Z",
-      "lastUsedAt": null,
-      "createdBy": "system",
-      "updatedBy": "system"
+      "updatedBy": "system",
+      "version": 1,
+      "requireApproval": false,
+      "changelog": []
     }
   }
 }
